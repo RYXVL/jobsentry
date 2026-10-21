@@ -1,2 +1,7 @@
+backend/data/
 local-hidden
+.vscode/
+__pycache__/
+
 .DS_Store
+.env
