@@ -1,0 +1,30 @@
+.list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* Tighter leading so long titles that wrap still read as one heading. */
+.item {
+  line-height: 1.35;
+}
+
+.title {
+  font-size: var(--text-lg);
+  text-decoration: none;
+}
+
+.title:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+/* Team and location lines under the title. */
+.meta {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  line-height: var(--leading);
+}
+
+.title + .meta {
+  margin-top: var(--space-1);
+}

@@ -81,7 +81,7 @@ class Settings:
     data_dir: Path = BACKEND_DIR / "data"
     http_timeout: float = 30.0
     http_retries: int = 3
-    user_agent: str = "Mozilla/5.0",
+    user_agent: str = "Mozilla/5.0"
     api_host: str = "127.0.0.1"
     api_port: int = 8000
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS

@@ -1,0 +1,17 @@
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.position {
+  color: var(--ink-soft);
+}
+
+/* Keep the buttons in place when one is hidden on the first/last page. */
+.placeholder {
+  visibility: hidden;
+}

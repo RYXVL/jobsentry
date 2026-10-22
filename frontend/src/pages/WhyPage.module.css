@@ -1,0 +1,19 @@
+.reasons {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.reasonTitle {
+  font-size: var(--text-lg);
+}
+
+.reasonText {
+  margin-top: var(--space-2);
+  color: var(--ink-soft);
+}
+
+.cta {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-6);
+}

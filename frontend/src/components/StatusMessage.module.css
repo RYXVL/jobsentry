@@ -1,0 +1,21 @@
+.status {
+  color: var(--ink-soft);
+}
+
+.error {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--ribbon);
+}
+
+.errorTitle {
+  color: var(--ribbon);
+}
+
+.hint {
+  margin-top: var(--space-2);
+  color: var(--ink-soft);
+}
+
+.retry {
+  margin-top: var(--space-4);
+}

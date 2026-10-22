@@ -1,0 +1,15 @@
+.page {
+  width: min(100% - 2 * var(--space-4), var(--measure));
+  margin-inline: auto;
+  padding-block: var(--space-4) var(--space-6);
+}
+
+.header {
+  margin-bottom: clamp(var(--space-5), 8vw, var(--space-6));
+}
+
+.home {
+  font-size: var(--text-lg);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}

@@ -1,0 +1,42 @@
+/* The name and two buttons, each on its own centred row. */
+.home {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.inner {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.title {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-display);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  animation: pulse 2.4s ease-in-out infinite alternate;
+}
+
+/* A slow breathe: slightly fainter and larger, then back. */
+@keyframes pulse {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.62;
+    transform: scale(1.025);
+  }
+}
+
+/* Hold the name still for people who've asked their OS for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .title {
+    animation: none;
+  }
+}

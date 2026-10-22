@@ -1,0 +1,43 @@
+/*
+ * A solid offset shadow sits below-right of the button. Pressing it slides
+ * the button onto its shadow, like a key going down.
+ */
+.button {
+  display: inline-block;
+  padding: 0.5em 1.25em;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--press) var(--press) 0 var(--ink);
+  transition:
+    transform 70ms ease-out,
+    box-shadow 70ms ease-out,
+    background-color 120ms ease-out,
+    color 120ms ease-out;
+}
+
+.button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.button:active,
+.button[aria-busy="true"] {
+  transform: translate(var(--press), var(--press));
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.button:disabled {
+  cursor: progress;
+}
+
+.large {
+  padding: 0.65em 1.6em;
+  font-size: var(--text-lg);
+}

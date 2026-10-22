@@ -1,0 +1,46 @@
+.list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.row {
+  display: block;
+  text-decoration: none;
+}
+
+/* "Stripe ............ 1,240 jobs": an index with dotted leaders. */
+.line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.leader {
+  flex: 1;
+  min-width: var(--space-4);
+  border-bottom: 1.5px dotted var(--rule);
+  transform: translateY(-0.3em);
+}
+
+.count {
+  white-space: nowrap;
+}
+
+.notFetched {
+  color: var(--ink-soft);
+}
+
+.updated {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.row:hover .name {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+.row:hover .leader {
+  border-bottom-color: var(--ink-soft);
+}

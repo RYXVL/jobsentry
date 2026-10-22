@@ -1,0 +1,41 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: var(--space-3);
+  color: var(--ink-soft);
+}
+
+.back:hover {
+  color: var(--ink);
+}
+
+.title {
+  font-size: var(--text-xl);
+}
+
+.intro {
+  margin-top: var(--space-2);
+  color: var(--ink-soft);
+}
+
+/* Right-aligned beside the title; left-aligned once it wraps below on small screens. */
+.actions {
+  display: grid;
+  justify-items: end;
+  text-align: right;
+}
+
+@media (max-width: 40rem) {
+  .actions {
+    justify-items: start;
+    text-align: left;
+  }
+}

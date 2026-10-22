@@ -1,0 +1,15 @@
+.refreshed {
+  margin-top: var(--space-2);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.refreshError {
+  margin-bottom: var(--space-5);
+}
+
+/* Dim the list slightly while the next page loads. */
+.loading {
+  opacity: 0.55;
+  transition: opacity 150ms;
+}
