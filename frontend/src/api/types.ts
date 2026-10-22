@@ -42,6 +42,28 @@ export interface RefreshResult {
   job_count: number;
 }
 
+/** One source's result inside a refresh-all. */
+export interface RefreshItem {
+  source: string;
+  company: string;
+  ok: boolean;
+  fetched_at: string | null;
+  job_count: number | null;
+  /** Why it failed; null when ok. */
+  error: ApiErrorBody["error"] | null;
+}
+
+export interface RefreshAllResult {
+  results: RefreshItem[];
+  succeeded: number;
+  failed: number;
+}
+
+export interface ClearResult {
+  /** How many sources had saved data. */
+  cleared_sources: number;
+}
+
 /** Optional filters for GET /sources/{source}/jobs. */
 export interface JobListParams {
   q?: string;

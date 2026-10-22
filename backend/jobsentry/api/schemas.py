@@ -80,3 +80,20 @@ class ErrorDetail(Schema):
 
 class ErrorOut(Schema):
     error: ErrorDetail
+
+class RefreshItemOut(Schema):
+    """One source's result inside a refresh-all."""
+    source: str
+    company: str
+    ok: bool
+    fetched_at: str | None = None
+    job_count: int | None = None
+    error: ErrorDetail | None = Field(None, description="Why it failed; null when ok")
+
+class RefreshAllOut(Schema):
+    results: list[RefreshItemOut]
+    succeeded: int
+    failed: int
+
+class ClearOut(Schema):
+    cleared_sources: int = Field(description="How many sources had saved data")

@@ -44,7 +44,37 @@ class JsonJobStore(JobStore):
         data = self._read(self.details_path(source, job_id))
         return JobDetails.from_dict(data) if data else None
 
+    def clear(self) -> int:
+        """Delete only the files this store writes (jobs.json and jobs/*.json).
+        Anything else in data_dir is left alone, and a folder is removed only
+        once it is empty."""
+        if not self.data_dir.is_dir():
+            return 0
+        cleared = 0
+        for source_dir in self.data_dir.iterdir():
+            if not source_dir.is_dir():
+                continue
+            snapshot = source_dir / "jobs.json"
+            details_dir = source_dir / "jobs"
+            if not (snapshot.exists() or details_dir.is_dir()):
+                continue
+            snapshot.unlink(missing_ok=True)
+            if details_dir.is_dir():
+                for details_file in details_dir.glob("*.json"):
+                    details_file.unlink()
+                self._remove_if_empty(details_dir)
+            self._remove_if_empty(source_dir)
+            cleared += 1
+        return cleared
+
     # Helpers
+    @staticmethod
+    def _remove_if_empty(path: Path) -> None:
+        try:
+            path.rmdir()
+        except OSError:
+            pass  # not empty: something else lives here, so keep it
+
     @staticmethod
     def _read(path: Path) -> Any:
         if not path.exists():

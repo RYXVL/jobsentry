@@ -4,6 +4,7 @@
  * Keys are hierarchical (["sources", name, "jobs", params]) so invalidating
  * ["sources"] after a refresh updates every list and count at once.
  */
+
 import {
   keepPreviousData,
   useMutation,
@@ -43,5 +44,27 @@ export function useRefreshSource(source: string) {
   return useMutation({
     mutationFn: () => api.refreshSource(source),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sources }),
+  });
+}
+
+/** Re-scrape every source, then refresh everything shown. */
+export function useRefreshAll() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.refreshAll,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sources }),
+  });
+}
+
+/** Delete all saved jobs. Cached job lists are dropped, not just marked stale,
+ *  so deleted jobs never flash back on screen. */
+export function useClearAll() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.clearAll,
+    onSuccess: () => {
+      queryClient.removeQueries({ predicate: (query) => query.queryKey.length > 1 });
+      return queryClient.invalidateQueries({ queryKey: queryKeys.sources });
+    },
   });
 }

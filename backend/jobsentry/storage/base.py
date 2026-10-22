@@ -22,3 +22,8 @@ class JobStore(ABC):
     @abstractmethod
     def load_details(self, source: str, job_id: str) -> JobDetails | None:
         """Return saved details for a job, or None if not saved yet."""
+
+    @abstractmethod
+    def clear(self) -> int:
+        """Delete every saved snapshot and job detail, for every source.
+        Return how many sources had saved data."""

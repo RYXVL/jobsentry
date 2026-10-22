@@ -1,0 +1,18 @@
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* Progress, results and errors from the two buttons, above the list. */
+.notice {
+  color: var(--ink-soft);
+}
+
+.notice:not(:empty) {
+  margin-bottom: var(--space-5);
+}
+
+.failures {
+  margin-top: var(--space-2);
+}

@@ -2,8 +2,16 @@
  * One function per backend endpoint. Components never call fetch directly;
  * they use the hooks in ./queries.ts, which call these.
  */
+
 import { request, toQueryString } from "./client";
-import type { JobListParams, JobPage, RefreshResult, Source } from "./types";
+import type {
+  ClearResult,
+  JobListParams,
+  JobPage,
+  RefreshAllResult,
+  RefreshResult,
+  Source,
+} from "./types";
 
 const sourcePath = (source: string) => `/sources/${encodeURIComponent(source)}`;
 
@@ -17,4 +25,8 @@ export const api = {
 
   refreshSource: (source: string) =>
     request<RefreshResult>(`${sourcePath(source)}/refresh`, { method: "POST" }),
+
+  refreshAll: () => request<RefreshAllResult>("/sources/refresh", { method: "POST" }),
+
+  clearAll: () => request<ClearResult>("/sources/clear", { method: "POST" }),
 };

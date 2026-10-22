@@ -2,6 +2,8 @@
 
 Interfaces never talk to sources or storage directly; they call this, so
 behaviour (caching, refreshing, filtering, saving) stays identical everywhere.
+The module-level functions at the end (refresh_all, clear_all) work across
+every source at once.
 """
 
 from __future__ import annotations
@@ -10,12 +12,13 @@ import logging
 import threading
 from collections import Counter
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from ..config import Settings
-from ..core.exceptions import JobNotFoundError, RefreshInProgressError
+from ..core.exceptions import JobNotFoundError, JobsentryError, RefreshInProgressError
 from ..core.http import HttpClient
 from ..core.models import Job, JobDetails, JobSnapshot
-from ..sources import JobSource, create_source
+from ..sources import JobSource, available_sources, create_source
 from ..storage import JobStore, JsonJobStore
 from .queries import FacetValue, JobFacets, JobPage, JobQuery, SourceStatus
 
@@ -150,3 +153,46 @@ def _count(values: Iterable[str]) -> list[FacetValue]:
     """Count values; most common first, ties alphabetical."""
     counts = Counter(values)
     return [FacetValue(v, n) for v, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
+
+
+@dataclass(frozen=True)
+class RefreshOutcome:
+    """What happened when one source was refreshed by refresh_all()."""
+
+    source: str
+    company: str
+    snapshot: JobSnapshot | None = None
+    error: JobsentryError | None = None
+
+    @property
+    def ok(self) -> bool:
+        return self.error is None
+
+
+def refresh_all(settings: Settings | None = None, http: HttpClient | None = None) -> list[RefreshOutcome]:
+    """Refresh every source, one at a time to keep load on career sites low.
+    A failing source is recorded and skipped; the rest still run."""
+    settings = settings or Settings.from_env()
+    outcomes = []
+    for info in available_sources():
+        try:
+            snapshot, _ = JobService.create(info.name, settings=settings, http=http).refresh_jobs()
+            outcomes.append(RefreshOutcome(info.name, info.company, snapshot=snapshot))
+        except JobsentryError as error:
+            log.warning("Refreshing %s failed: %s", info.company, error)
+            outcomes.append(RefreshOutcome(info.name, info.company, error=error))
+    return outcomes
+
+
+def clear_all(settings: Settings | None = None) -> int:
+    """Delete all saved jobs and details for every source. Returns how many
+    sources had data. Refuses while any refresh is running, so a refresh
+    never writes into a half-cleared folder."""
+    with _refresh_locks_guard:
+        busy = sorted(name for name, lock in _refresh_locks.items() if lock.locked())
+    if busy:
+        raise RefreshInProgressError(
+            f"Can't clear while jobs are being refreshed ({', '.join(busy)}); try again shortly"
+        )
+    settings = settings or Settings.from_env()
+    return JsonJobStore(settings.data_dir).clear()
