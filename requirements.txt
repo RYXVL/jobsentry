@@ -1,3 +1,6 @@
+fastapi
+httpx
 pytest
 python-dotenv
 requests
+uvicorn
