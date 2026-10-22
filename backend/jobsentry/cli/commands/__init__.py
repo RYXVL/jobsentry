@@ -1,4 +1,4 @@
-"""The commands the CLI allows. To add a command, create a 
+"""The commands the CLI allows. To add a command, create a
 Command subclass in this folder and add it to COMMANDS."""
 
 from .base import Command

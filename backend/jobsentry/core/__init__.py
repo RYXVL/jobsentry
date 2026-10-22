@@ -18,7 +18,9 @@ __all__ = [
     "JobNotFoundError",
     "JobSnapshot",
     "JobsentryError",
+    "RefreshInProgressError",
     "Salary",
+    "SourceBlockedError",
     "SourceError",
     "SourceNotFoundError",
 ]
