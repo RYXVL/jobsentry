@@ -1,12 +1,24 @@
 """Application settings.
 
-Values come from environment variables either using the defaults below or variables set inside backend/.env 
+Values come from, in order of priority:
+    1. Real environment variables set on the machine
+    2. backend/.env (see backend/.env.example)
+    3. The defaults below
 
-    JOBSENTRY_DATA_DIR      where JSON is written (default: backend/data; relative paths are resolved against backend/)
+Scraping
+    JOBSENTRY_DATA_DIR      where JSON is written (default: backend/data;
+                            relative paths are resolved against backend/)
     JOBSENTRY_HTTP_TIMEOUT  seconds per request (default: 30)
     JOBSENTRY_HTTP_RETRIES  retries on 429/5xx and connection errors (default: 3)
+    JOBSENTRY_USER_AGENT    User-Agent header sent to career sites
 
-Invalid environment variable values raise ConfigError.
+API
+    JOBSENTRY_API_HOST      interface to bind (default: 127.0.0.1, this machine only)
+    JOBSENTRY_API_PORT      port to listen on (default: 8000)
+    JOBSENTRY_CORS_ORIGINS  comma-separated frontend URLs allowed to call the API
+
+The CLI and the API both call Settings.from_env(), so they always share the
+same configuration. Invalid values raise ConfigError.
 """
 
 from __future__ import annotations
@@ -22,12 +34,22 @@ from .core.exceptions import ConfigError
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BACKEND_DIR / ".env"
 
+#: Common local dev-server URLs
+DEFAULT_CORS_ORIGINS = (
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+)
+
 def load_env_file(path: Path = ENV_FILE) -> None:
     """Load `path` into os.environ without overriding variables already set.
     A missing file is fine; defaults are used instead."""
     load_dotenv(path, override=False)
 
-def _get_number(name: str, default: float, kind: type, minimum: float) -> float:
+def _get_number(
+    name: str, default: float, kind: type, minimum: float, maximum: float | None = None
+) -> float:
     """Read a numeric variable, raising ConfigError if it is invalid."""
     raw = os.getenv(name)
     if raw is None or raw.strip() == "":
@@ -37,9 +59,17 @@ def _get_number(name: str, default: float, kind: type, minimum: float) -> float:
     except ValueError:
         expected = "a whole number" if kind is int else "a number"
         raise ConfigError(f"{name} must be {expected}, got '{raw}'") from None
-    if value < minimum:
-        raise ConfigError(f"{name} must be at least {minimum}, got {value}")
+    if value < minimum or (maximum is not None and value > maximum):
+        bounds = f"between {minimum} and {maximum}" if maximum is not None else f"at least {minimum}"
+        raise ConfigError(f"{name} must be {bounds}, got {value}")
     return value
+
+def _get_list(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
+    """Read a comma-separated variable into a tuple of non-empty strings."""
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return default
+    return tuple(item.strip() for item in raw.split(",") if item.strip())
 
 def _resolve_path(value: str | Path) -> Path:
     """Make relative paths relative to backend/, not the current directory."""
@@ -51,14 +81,22 @@ class Settings:
     data_dir: Path = BACKEND_DIR / "data"
     http_timeout: float = 30.0
     http_retries: int = 3
+    user_agent: str = "Mozilla/5.0",
+    api_host: str = "127.0.0.1"
+    api_port: int = 8000
+    cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
 
     @classmethod
     def from_env(cls, env_file: Path = ENV_FILE) -> Settings:
         """Build settings from the environment, loading `env_file` first."""
         load_env_file(env_file)
-        defaults = cls()
+        d = cls()
         return cls(
-            data_dir=_resolve_path(os.getenv("JOBSENTRY_DATA_DIR") or defaults.data_dir),
-            http_timeout=_get_number("JOBSENTRY_HTTP_TIMEOUT", defaults.http_timeout, float, 0.1),
-            http_retries=_get_number("JOBSENTRY_HTTP_RETRIES", defaults.http_retries, int, 0),
+            data_dir=_resolve_path(os.getenv("JOBSENTRY_DATA_DIR") or d.data_dir),
+            http_timeout=_get_number("JOBSENTRY_HTTP_TIMEOUT", d.http_timeout, float, 0.1),
+            http_retries=_get_number("JOBSENTRY_HTTP_RETRIES", d.http_retries, int, 0),
+            user_agent=(os.getenv("JOBSENTRY_USER_AGENT") or "").strip() or d.user_agent,
+            api_host=(os.getenv("JOBSENTRY_API_HOST") or "").strip() or d.api_host,
+            api_port=_get_number("JOBSENTRY_API_PORT", d.api_port, int, 1, 65535),
+            cors_origins=_get_list("JOBSENTRY_CORS_ORIGINS", d.cors_origins),
         )
