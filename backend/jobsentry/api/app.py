@@ -1,0 +1,52 @@
+"""Builds the FastAPI application.
+
+`app` is what uvicorn serves. create_app() exists so tests (and 
+any future entry point) can build an app with their own Settings.
+"""
+
+from __future__ import annotations
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .. import __version__
+from ..config import Settings
+from .dependencies import get_settings
+from .errors import register_error_handlers
+from .routes import ROUTERS
+
+#: Every endpoint lives under this prefix, so a v2 can coexist later.
+API_PREFIX = "/api/v1"
+
+DESCRIPTION = """
+Local API for jobsentry. It runs the same scrapers as the CLI and serves the
+saved results to the frontend.
+
+* **GET** endpoints read saved data (and fetch it once if nothing is saved yet).
+* **POST** `/sources/{source}/refresh` re-scrapes a company's career site.
+"""
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    """Build the app. If `settings` is given, every request uses it instead
+    of the values from backend/.env (handy for tests)."""
+    app = FastAPI(title="jobsentry API", version=__version__, description=DESCRIPTION)
+
+    if settings is None:
+        settings = get_settings()
+    else:
+        app.dependency_overrides[get_settings] = lambda: settings
+
+    # The frontend runs on a different port, so browsers need CORS permission.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(settings.cors_origins),
+        allow_methods=["GET", "POST"],
+        allow_headers=["*"],
+    )
+
+    register_error_handlers(app)
+    for router in ROUTERS:
+        app.include_router(router, prefix=API_PREFIX)
+    return app
+
+app = create_app()
