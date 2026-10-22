@@ -11,6 +11,14 @@
   --rule: rgba(0, 0, 0, 0.28);   /* dotted leaders, separators */
   --ribbon: #b3261e;             /* errors */
 
+  /* Glass: translucent cards that blur the gradient behind them */
+  --glass-card: rgba(255, 250, 246, 0.4);         /* card */
+  --glass-card-hover: rgba(255, 250, 246, 0.65);  /* hovered card, initials badge */
+  --glass-fallback: rgba(255, 250, 246, 0.85);    /* card, where blur is unsupported */
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  --glass-filter: blur(18px) saturate(140%);
+
   /* Type: Cambria where installed, otherwise Caladea (a free font with the
      same letter shapes and widths, loaded in main.tsx) */
   --font: Cambria, Caladea, Georgia, serif;
@@ -29,9 +37,15 @@
   --space-5: 2.5rem;
   --space-6: 4rem;
 
+  /* Shape */
+  --radius-sm: 0.625rem; /* logo badge */
+  --radius-md: 1rem;     /* card */
+
   /* Layout */
   --measure: 46rem;      /* page column width, about 70 characters */
   --press: 4px;          /* depth of the button's shadow */
+  --card-min: 12rem;     /* narrowest a source card gets before the grid drops a column */
+  --logo-size: 3rem;
 
   color-scheme: light;
 }

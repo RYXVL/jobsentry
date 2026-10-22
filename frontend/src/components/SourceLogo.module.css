@@ -1,0 +1,20 @@
+/* A square badge: the company's logo, or its initials when there is none. */
+.logo {
+  flex: none;
+  width: var(--logo-size);
+  height: var(--logo-size);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  object-fit: contain;
+}
+
+.initials {
+  display: grid;
+  place-items: center;
+  background: var(--glass-card-hover);
+  color: var(--ink);
+  font-size: var(--text-md);
+  letter-spacing: 0.04em;
+  user-select: none;
+}
