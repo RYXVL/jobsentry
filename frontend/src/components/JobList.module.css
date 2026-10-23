@@ -1,11 +1,33 @@
 .list {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-/* Tighter leading so long titles that wrap still read as one heading. */
+/* One frosted-glass card per job, matching the source cards: the summary
+   on the left, the posting date on the right. */
 .item {
-  line-height: 1.35;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  line-height: 1.35; /* long titles that wrap still read as one heading */
+  background: var(--glass-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+
+/* Browsers without backdrop blur get a more solid fill so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .item {
+    background: var(--glass-fallback);
+  }
 }
 
 .title {
@@ -18,7 +40,7 @@
   text-decoration-thickness: 1px;
 }
 
-/* Team and location lines under the title. */
+/* Location and mode lines under the title. */
 .meta {
   color: var(--ink-soft);
   font-size: var(--text-sm);
@@ -27,4 +49,28 @@
 
 .title + .meta {
   margin-top: var(--space-1);
+}
+
+/* "Posted 23 Apr 2026", right-aligned. */
+.posted {
+  margin: 0;
+  font-size: var(--text-sm);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.label {
+  color: var(--ink-soft);
+}
+
+/* Narrow screens: the date moves under the summary. (Media queries can't
+   read CSS variables, so this width is written out here.) */
+@media (max-width: 36rem) {
+  .item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .posted {
+    text-align: left;
+  }
 }

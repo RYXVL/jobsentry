@@ -5,18 +5,30 @@
                                 lookup lists in jobIndexData.filters.
   /careers/listing/<slug>/<id>  pageProps.listing: one job with description
                                 (Markdown), salary and posting date.
+
+The search index has no dates, so fetch_jobs() also makes one request to
+Stripe's public Greenhouse board for every job's posting date, matched by
+job ID (the index's greenhouseId). That request is optional: if it fails,
+the jobs are still returned, just without dates.
 """
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from ...core.exceptions import SourceError
-from ...core.models import Job, JobDetails, Salary
+from ...core.models import Job, JobDetails, Salary, sort_work_modes
+from ..greenhouse_api import apply_posted_dates, fetch_posted_dates
 from ..registry import register
 from ..strategies import NextDataSource
 
+logger = logging.getLogger(__name__)
+
 BASE_URL = "https://stripe.com"
+
+#: Stripe's board on Greenhouse: boards-api.greenhouse.io/v1/boards/<token>/jobs
+GREENHOUSE_BOARD = "stripe"
 
 @register
 class StripeSource(NextDataSource):
@@ -31,7 +43,8 @@ class StripeSource(NextDataSource):
             filters, listings = index["filters"], index["listings"]
         except KeyError as e:
             raise SourceError(f"Stripe job index missing {e}") from e
-        return [self._to_job(item, filters) for item in listings]
+        jobs = [self._to_job(item, filters) for item in listings]
+        return self._add_posted_dates(jobs)
 
     def fetch_job_details(self, job: Job) -> JobDetails:
         listing = self.get_page_props(job.url).get("listing")
@@ -52,10 +65,21 @@ class StripeSource(NextDataSource):
             job,
             description=(listing.get("contentMarkdown") or "").strip(),
             description_format="markdown",
-            posted_at=listing.get("postedAt"),
+            posted_at=listing.get("postedAt") or job.posted_at,
             salary=salary,
             apply_url=f"{BASE_URL}/careers/apply/{slug}/{job.id}",
         )
+
+    def _add_posted_dates(self, jobs: list[Job]) -> list[Job]:
+        """Copy posting dates from Greenhouse onto `jobs`.
+        On any failure (including a block, which is never retried), log it
+        and return the jobs without dates rather than failing the refresh."""
+        try:
+            dates = fetch_posted_dates(self.http, GREENHOUSE_BOARD)
+        except SourceError as e:
+            logger.warning("Stripe: posting dates unavailable from Greenhouse: %s", e)
+            return jobs
+        return apply_posted_dates(jobs, dates)
 
     def _to_job(self, item: dict[str, Any], filters: dict[str, Any]) -> Job:
         """Convert one index entry, resolving its index numbers into names."""
@@ -70,6 +94,10 @@ class StripeSource(NextDataSource):
             teams=[filters["teams"][i]["name"] for i in item.get("teamIndices", [])],
             locations=[loc["name"] for loc in locations],
             remote=any(loc.get("remote") for loc in locations),
+            # Each location is flagged remote or not; Stripe never says hybrid.
+            work_modes=sort_work_modes(
+                "remote" if loc.get("remote") else "on_site" for loc in locations
+            ),
             employment_type=item.get("employmentType"),
             tags=[filters["tags"][i]["name"] for i in item.get("tagIndices", [])],
             extra={"slug": item["slug"]},

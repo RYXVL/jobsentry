@@ -32,9 +32,13 @@ class JobOut(Schema):
     company: str
     teams: list[str]
     locations: list[str]
-    remote: bool
+    remote: bool = Field(description="True if any location is remote")
+    work_modes: list[str] = Field(
+        description="Any of on_site, hybrid, remote; empty if the site doesn't say"
+    )
     employment_type: str | None
     tags: list[str]
+    posted_at: str | None = Field(description="When the job was first published (ISO 8601)")
 
 class SalaryOut(Schema):
     min: float | None
@@ -45,7 +49,6 @@ class SalaryOut(Schema):
 class JobDetailsOut(JobOut):
     description: str
     description_format: str = Field(description="markdown, html or text")
-    posted_at: str | None
     salary: SalaryOut | None
     apply_url: str | None
 

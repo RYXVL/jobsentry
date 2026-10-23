@@ -13,6 +13,9 @@ export interface Source {
   job_count: number | null;
 }
 
+/** How a job can be worked (backend: core.models.WORK_MODES). */
+export type WorkMode = "on_site" | "hybrid" | "remote";
+
 export interface Job {
   source: string;
   id: string;
@@ -21,9 +24,14 @@ export interface Job {
   company: string;
   teams: string[];
   locations: string[];
+  /** True if any location is remote. */
   remote: boolean;
+  /** Only the modes the site states; empty if it doesn't say. */
+  work_modes: WorkMode[];
   employment_type: string | null;
   tags: string[];
+  /** ISO 8601: when the job was first published, null if unknown. */
+  posted_at: string | null;
 }
 
 export interface JobPage {
