@@ -13,13 +13,25 @@
   text-align: center;
 }
 
+/* Logo and name side by side, centred on each other. */
 .title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18em;
   margin-bottom: var(--space-3);
   font-size: var(--text-display);
   font-weight: 400;
   letter-spacing: -0.03em;
   line-height: 1;
   animation: pulse 2.4s ease-in-out infinite alternate;
+}
+
+/* Sized in em so it scales with the title on every screen; 0.9em is about
+   the height of the capital letters plus the descenders' reach. */
+.logo {
+  flex: none;
+  width: auto;
+  height: 1em;
 }
 
 /* A slow breathe: slightly fainter and larger, then back. */
