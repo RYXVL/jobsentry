@@ -7,35 +7,51 @@
 }
 
 /* One frosted-glass card per job, matching the source cards: the summary
-   on the left, the posting date on the right. */
-.item {
+   on the left, the posting date on the right. The whole card is the link. */
+.card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-2) var(--space-4);
   padding: var(--space-3) var(--space-4);
   line-height: 1.35; /* long titles that wrap still read as one heading */
+  color: inherit;
+  text-decoration: none;
   background: var(--glass-card);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   box-shadow: var(--glass-shadow);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
+  transition: background-color 160ms ease;
 }
 
 /* Browsers without backdrop blur get a more solid fill so text stays readable. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .item {
+  .card {
     background: var(--glass-fallback);
   }
 }
 
-.title {
-  font-size: var(--text-lg);
-  text-decoration: none;
+.card:hover {
+  background: var(--glass-card-hover);
 }
 
-.title:hover {
+.card:focus-visible {
+  outline: 1.5px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Title, location and mode stacked on separate lines. */
+.summary {
+  display: grid;
+}
+
+.title {
+  font-size: var(--text-lg);
+}
+
+.card:hover .title {
   text-decoration: underline;
   text-decoration-thickness: 1px;
 }
@@ -53,7 +69,6 @@
 
 /* "Posted 23 Apr 2026", right-aligned. */
 .posted {
-  margin: 0;
   font-size: var(--text-sm);
   text-align: right;
   white-space: nowrap;
@@ -66,7 +81,7 @@
 /* Narrow screens: the date moves under the summary. (Media queries can't
    read CSS variables, so this width is written out here.) */
 @media (max-width: 36rem) {
-  .item {
+  .card {
     grid-template-columns: minmax(0, 1fr);
   }
 
