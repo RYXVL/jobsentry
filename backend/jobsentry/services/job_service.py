@@ -120,9 +120,10 @@ class JobService:
         )
 
     def query(self, query: JobQuery) -> JobPage:
-        """Filter and paginate saved jobs (fetching them first if none are saved)."""
+        """Filter, sort and paginate saved jobs (fetching them first if none
+        are saved). Sorting happens before paging, so pages follow one order."""
         snapshot = self.get_jobs()
-        matches = [job for job in snapshot.jobs if query.matches(job)]
+        matches = query.sort_jobs([job for job in snapshot.jobs if query.matches(job)])
         return JobPage(
             source=self.source.name,
             fetched_at=snapshot.fetched_at,

@@ -10,6 +10,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Path, Query
 
 from ...services import MAX_PAGE_SIZE, JobQuery, JobService
+from ...services.queries import JobSort
 from ..dependencies import get_job_service
 from ..schemas import ErrorOut, JobDetailsOut, JobFacetsOut, JobPageOut
 
@@ -30,14 +31,18 @@ def list_jobs(
     remote: bool | None = Query(None, description="true = remote only, false = on-site only"),
     employment_type: str | None = Query(None, description="e.g. Full time"),
     tag: str | None = Query(None, description="Exact tag (see /facets)"),
+    sort: JobSort = Query(
+        "newest",
+        description="Order by date posted: newest or oldest first. Jobs without a date go last.",
+    ),
     limit: int = Query(50, ge=1, le=MAX_PAGE_SIZE),
     offset: int = Query(0, ge=0),
 ) -> JobPageOut:
-    """Saved jobs matching every filter given. If the source has never been
-    fetched, it is fetched first (which can take a while)."""
+    """Saved jobs matching every filter given, in the order asked for. If the
+    source has never been fetched, it is fetched first (which can take a while)."""
     page = service.query(JobQuery(
         text=q, team=team, location=location, remote=remote,
-        employment_type=employment_type, tag=tag, limit=limit, offset=offset,
+        employment_type=employment_type, tag=tag, sort=sort, limit=limit, offset=offset,
     ))
     return JobPageOut.model_validate(page)
 

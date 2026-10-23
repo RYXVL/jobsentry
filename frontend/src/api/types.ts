@@ -16,6 +16,9 @@ export interface Source {
 /** How a job can be worked (backend: core.models.WORK_MODES). */
 export type WorkMode = "on_site" | "hybrid" | "remote";
 
+/** Job list order by date posted (backend: services.queries.JobSort). */
+export type JobSort = "newest" | "oldest";
+
 export interface Job {
   source: string;
   id: string;
@@ -72,7 +75,7 @@ export interface ClearResult {
   cleared_sources: number;
 }
 
-/** Optional filters for GET /sources/{source}/jobs. */
+/** Optional filters and order for GET /sources/{source}/jobs. */
 export interface JobListParams {
   q?: string;
   team?: string;
@@ -80,6 +83,8 @@ export interface JobListParams {
   remote?: boolean;
   employment_type?: string;
   tag?: string;
+  /** Defaults to "newest" on the backend. */
+  sort?: JobSort;
   limit?: number;
   offset?: number;
 }
