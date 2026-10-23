@@ -6,6 +6,11 @@
   /careers/listing/<slug>/<id>  pageProps.listing: one job with description
                                 (Markdown), salary and posting date.
 
+Locations form a tree through parentLocationIndex: regions ("Americas") at
+the top, then countries, then cities and "Remote in ..." entries. Every
+entry has a countryCode, but a region's is only a representative one
+("Americas" says US), so countries are taken from non-region entries only.
+
 The search index has no dates, so fetch_jobs() also makes one request to
 Stripe's public Greenhouse board for every job's posting date, matched by
 job ID (the index's greenhouseId). That request is optional: if it fails,
@@ -18,7 +23,7 @@ import logging
 from typing import Any
 
 from ...core.exceptions import SourceError
-from ...core.models import Job, JobDetails, Salary, sort_work_modes
+from ...core.models import Job, JobDetails, Salary, normalize_countries, sort_work_modes
 from ..greenhouse_api import apply_posted_dates, fetch_posted_dates
 from ..registry import register
 from ..strategies import NextDataSource
@@ -93,6 +98,10 @@ class StripeSource(NextDataSource):
             company=self.company,
             teams=[filters["teams"][i]["name"] for i in item.get("teamIndices", [])],
             locations=[loc["name"] for loc in locations],
+            # Regions have no parent and only a representative code; skip them.
+            countries=normalize_countries(
+                loc.get("countryCode") for loc in locations if "parentLocationIndex" in loc
+            ),
             remote=any(loc.get("remote") for loc in locations),
             # Each location is flagged remote or not; Stripe never says hybrid.
             work_modes=sort_work_modes(

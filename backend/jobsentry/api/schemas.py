@@ -32,6 +32,7 @@ class JobOut(Schema):
     company: str
     teams: list[str]
     locations: list[str]
+    countries: list[str] = Field(description="ISO 3166-1 alpha-2 codes, e.g. CA, US")
     remote: bool = Field(description="True if any location is remote")
     work_modes: list[str] = Field(
         description="Any of on_site, hybrid, remote; empty if the site doesn't say"
@@ -68,6 +69,7 @@ class JobFacetsOut(Schema):
     source: str
     teams: list[FacetValueOut]
     locations: list[FacetValueOut]
+    countries: list[FacetValueOut] = Field(description="ISO country codes with job counts")
     employment_types: list[FacetValueOut]
     tags: list[FacetValueOut]
 

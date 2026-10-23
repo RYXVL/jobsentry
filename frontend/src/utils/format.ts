@@ -7,6 +7,7 @@ const relativeFormat = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" 
 const listFormat = new Intl.ListFormat(undefined, { style: "long", type: "conjunction" });
 const orListFormat = new Intl.ListFormat(undefined, { style: "long", type: "disjunction" });
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+const regionNames = new Intl.DisplayNames(undefined, { type: "region" });
 
 export function formatNumber(value: number): string {
   return numberFormat.format(value);
@@ -28,6 +29,15 @@ export function formatList(items: string[], max = 3): string {
 export function formatDate(iso: string): string {
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? iso : dateFormat.format(date);
+}
+
+/** "CA" becomes "Canada", in the browser's language. Unknown codes are shown as given. */
+export function formatCountry(code: string): string {
+  try {
+    return regionNames.of(code) ?? code;
+  } catch {
+    return code; // not a valid region code
+  }
 }
 
 const WORK_MODE_LABELS: Record<WorkMode, string> = {

@@ -27,6 +27,8 @@ export interface Job {
   company: string;
   teams: string[];
   locations: string[];
+  /** ISO 3166-1 alpha-2 codes, e.g. ["CA", "US"]. */
+  countries: string[];
   /** True if any location is remote. */
   remote: boolean;
   /** Only the modes the site states; empty if it doesn't say. */
@@ -45,6 +47,23 @@ export interface JobPage {
   limit: number;
   offset: number;
   jobs: Job[];
+}
+
+/** One filter value and how many saved jobs have it. */
+export interface FacetValue {
+  value: string;
+  count: number;
+}
+
+/** GET /sources/{source}/jobs/facets: every filter value in the saved jobs. */
+export interface JobFacets {
+  source: string;
+  teams: FacetValue[];
+  locations: FacetValue[];
+  /** Values are ISO country codes. */
+  countries: FacetValue[];
+  employment_types: FacetValue[];
+  tags: FacetValue[];
 }
 
 export interface RefreshResult {
@@ -77,9 +96,12 @@ export interface ClearResult {
 
 /** Optional filters and order for GET /sources/{source}/jobs. */
 export interface JobListParams {
+  /** Keywords: every word must appear in the title or a team name. */
   q?: string;
   team?: string;
   location?: string;
+  /** ISO country codes; a job in any of them matches. */
+  country?: string[];
   remote?: boolean;
   employment_type?: string;
   tag?: string;

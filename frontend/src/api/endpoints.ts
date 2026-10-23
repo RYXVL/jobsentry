@@ -6,6 +6,7 @@
 import { request, toQueryString } from "./client";
 import type {
   ClearResult,
+  JobFacets,
   JobListParams,
   JobPage,
   RefreshAllResult,
@@ -22,6 +23,8 @@ export const api = {
 
   listJobs: (source: string, params: JobListParams = {}) =>
     request<JobPage>(`${sourcePath(source)}/jobs${toQueryString(params)}`),
+
+  getJobFacets: (source: string) => request<JobFacets>(`${sourcePath(source)}/jobs/facets`),
 
   refreshSource: (source: string) =>
     request<RefreshResult>(`${sourcePath(source)}/refresh`, { method: "POST" }),

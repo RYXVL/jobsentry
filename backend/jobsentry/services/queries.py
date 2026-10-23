@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Literal
 
-from ..core.models import Job
+from ..core.models import Job, normalize_countries
 from ..sources import SourceInfo
 
 #: Upper bound on page size, so one request can't return an enormous list.
@@ -26,9 +26,10 @@ class JobQuery:
     optional and case-insensitive; a job must satisfy all the filters that
     are set. Jobs are sorted before paging, so every page follows one order."""
 
-    text: str | None = None             # substring of the title
+    text: str | None = None             # keywords: every word must be in the title or a team
     team: str | None = None             # exact team name
     location: str | None = None         # substring of any location
+    countries: tuple[str, ...] = ()     # ISO codes; a job in ANY of them matches
     remote: bool | None = None          # True = remote only, False = on-site only
     employment_type: str | None = None  # exact, e.g. "Full time"
     tag: str | None = None              # exact tag name
@@ -43,13 +44,17 @@ class JobQuery:
             raise ValueError(f"limit must be between 1 and {MAX_PAGE_SIZE}")
         if self.offset < 0:
             raise ValueError("offset must be 0 or more")
+        # Frozen, so normalise through object.__setattr__ ("ca" matches "CA").
+        object.__setattr__(self, "countries", tuple(normalize_countries(self.countries)))
 
     def matches(self, job: Job) -> bool:
-        if self.text and self.text.lower() not in job.title.lower():
+        if self.text and not _has_keywords(job, self.text):
             return False
         if self.team and not _contains_exact(job.teams, self.team):
             return False
         if self.location and not any(self.location.lower() in loc.lower() for loc in job.locations):
+            return False
+        if self.countries and not set(self.countries) & set(job.countries):
             return False
         if self.remote is not None and job.remote != self.remote:
             return False
@@ -72,6 +77,12 @@ class JobQuery:
                 dated.append((posted, job))
         dated.sort(key=lambda pair: pair[0], reverse=self.sort == "newest")
         return [job for _, job in dated] + undated
+
+def _has_keywords(job: Job, text: str) -> bool:
+    """True if every space-separated word in `text` appears in the job's
+    title or one of its team names (case-insensitive, partial words count)."""
+    fields = [job.title.lower(), *(team.lower() for team in job.teams)]
+    return all(any(word in f for f in fields) for word in text.lower().split())
 
 def _contains_exact(values: list[str], wanted: str) -> bool:
     wanted = wanted.lower()
@@ -111,6 +122,7 @@ class JobFacets:
     source: str
     teams: list[FacetValue]
     locations: list[FacetValue]
+    countries: list[FacetValue]       # ISO codes
     employment_types: list[FacetValue]
     tags: list[FacetValue]
 

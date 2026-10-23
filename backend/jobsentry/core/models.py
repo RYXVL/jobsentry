@@ -21,6 +21,11 @@ def sort_work_modes(modes: Iterable[str]) -> list[str]:
     wanted = set(modes)
     return [mode for mode in WORK_MODES if mode in wanted]
 
+def normalize_countries(codes: Iterable[str | None]) -> list[str]:
+    """Return ISO 3166-1 alpha-2 codes upper-cased, without blanks or
+    duplicates, sorted: e.g. ["us", "CA", None, "US"] becomes ["CA", "US"]."""
+    return sorted({code.strip().upper() for code in codes if code and code.strip()})
+
 def _known_fields(cls: type, data: dict[str, Any]) -> dict[str, Any]:
     """Keep only the keys that are fields of dataclass `cls`, so files saved
     by an older or newer version (with extra or removed fields) still load."""
@@ -38,6 +43,7 @@ class Job:
     company: str
     teams: list[str] = field(default_factory=list)
     locations: list[str] = field(default_factory=list)
+    countries: list[str] = field(default_factory=list)   # ISO codes, e.g. ["CA", "US"]
     remote: bool = False                  # True if any location is remote
     work_modes: list[str] = field(default_factory=list)  # see WORK_MODES
     employment_type: str | None = None

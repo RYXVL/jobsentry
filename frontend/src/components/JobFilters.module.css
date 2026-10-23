@@ -1,0 +1,22 @@
+/* Keywords grows to fill the row; the rest keep their natural width.
+   Everything wraps onto new lines on narrow screens. */
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.keywords {
+  flex: 1 1 12rem;
+}
+
+.keywords input {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

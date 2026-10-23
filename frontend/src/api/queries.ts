@@ -19,6 +19,7 @@ export const queryKeys = {
   sources: ["sources"] as const,
   source: (source: string) => ["sources", source] as const,
   jobs: (source: string, params: JobListParams) => ["sources", source, "jobs", params] as const,
+  facets: (source: string) => ["sources", source, "facets"] as const,
 };
 
 export function useSources() {
@@ -35,6 +36,20 @@ export function useJobs(source: string, params: JobListParams) {
     queryFn: () => api.listJobs(source, params),
     // Keep showing the current page while the next one loads.
     placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Filter options (countries, teams, ...) with counts. Pass `enabled: false`
+ * until the job list has loaded: for a never-fetched source, either request
+ * starts the first fetch, and a second one at the same time would be refused
+ * with refresh_in_progress.
+ */
+export function useJobFacets(source: string, { enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: queryKeys.facets(source),
+    queryFn: () => api.getJobFacets(source),
+    enabled,
   });
 }
 

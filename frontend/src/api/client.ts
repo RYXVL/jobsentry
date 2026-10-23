@@ -51,12 +51,16 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   throw new ApiError(response.status, "http_error", `Request failed with status ${response.status}.`);
 }
 
-/** Build a query string, skipping empty values. */
+/** Build a query string, skipping empty values. Arrays become repeated keys
+ *  (country=CA&country=US), which is how FastAPI reads list parameters. */
 export function toQueryString(params: object): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== "") {
-      search.set(key, String(value));
+    const values: unknown[] = Array.isArray(value) ? value : [value];
+    for (const item of values) {
+      if (item !== undefined && item !== null && item !== "") {
+        search.append(key, String(item));
+      }
     }
   }
   const query = search.toString();

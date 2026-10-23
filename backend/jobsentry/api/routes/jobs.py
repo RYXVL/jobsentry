@@ -25,9 +25,16 @@ ERRORS = {
 @router.get("", response_model=JobPageOut, responses=ERRORS, summary="List and filter jobs")
 def list_jobs(
     service: JobService = Depends(get_job_service),
-    q: str | None = Query(None, description="Text to find in the job title"),
+    q: str | None = Query(
+        None, description="Keywords: every word must appear in the title or a team name"
+    ),
     team: str | None = Query(None, description="Exact team name (see /facets)"),
     location: str | None = Query(None, description="Text to find in any location"),
+    country: list[str] | None = Query(
+        None,
+        description="ISO country code (see /facets). Repeat for several "
+        "(?country=CA&country=US); a job in any of them matches.",
+    ),
     remote: bool | None = Query(None, description="true = remote only, false = on-site only"),
     employment_type: str | None = Query(None, description="e.g. Full time"),
     tag: str | None = Query(None, description="Exact tag (see /facets)"),
@@ -41,8 +48,9 @@ def list_jobs(
     """Saved jobs matching every filter given, in the order asked for. If the
     source has never been fetched, it is fetched first (which can take a while)."""
     page = service.query(JobQuery(
-        text=q, team=team, location=location, remote=remote,
-        employment_type=employment_type, tag=tag, sort=sort, limit=limit, offset=offset,
+        text=q, team=team, location=location, countries=tuple(country or ()),
+        remote=remote, employment_type=employment_type, tag=tag,
+        sort=sort, limit=limit, offset=offset,
     ))
     return JobPageOut.model_validate(page)
 
@@ -50,8 +58,8 @@ def list_jobs(
 @router.get("/facets", response_model=JobFacetsOut, responses=ERRORS,
             summary="Filter options with counts")
 def job_facets(service: JobService = Depends(get_job_service)) -> JobFacetsOut:
-    """Every team, location, employment type and tag in the saved jobs, with
-    how many jobs have each. Use these to build filter dropdowns."""
+    """Every team, location, country, employment type and tag in the saved
+    jobs, with how many jobs have each. Use these to build filter dropdowns."""
     return JobFacetsOut.model_validate(service.facets())
 
 

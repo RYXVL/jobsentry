@@ -140,12 +140,13 @@ class JobService:
             source=self.source.name,
             teams=_count(team for job in jobs for team in job.teams),
             locations=_count(loc for job in jobs for loc in job.locations),
+            countries=_count(code for job in jobs for code in job.countries),
             employment_types=_count(job.employment_type for job in jobs if job.employment_type),
             tags=_count(tag for job in jobs for tag in job.tags),
         )
 
     def search(self, text: str) -> list[Job]:
-        """Case-insensitive title search over all saved jobs (no paging)."""
+        """Keyword search over all saved jobs (no paging); see JobQuery.text."""
         query = JobQuery(text=text)
         return [job for job in self.get_jobs().jobs if query.matches(job)]
 

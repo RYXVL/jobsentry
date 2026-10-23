@@ -1,7 +1,7 @@
 import { useId } from "react";
 
 import type { JobSort } from "../api/types";
-import styles from "./JobSortSelect.module.css";
+import fieldStyles from "./Field.module.css";
 
 /** Choices in display order. To add an order, add it here and to JobSort. */
 const OPTIONS: { value: JobSort; label: string }[] = [
@@ -14,17 +14,18 @@ interface JobSortSelectProps {
   onChange: (sort: JobSort) => void;
 }
 
-/** "Sort by date posted: Newest first / Oldest first", right-aligned above a job list. */
+/** "Sort by date posted" dropdown. The parent decides where it sits
+ *  (SourceJobsPage puts it at the right of the filter bar). */
 export function JobSortSelect({ value, onChange }: JobSortSelectProps) {
   const id = useId();
   return (
-    <div className={styles.sort}>
-      <label htmlFor={id} className={styles.label}>
+    <div className={fieldStyles.field}>
+      <label htmlFor={id} className={fieldStyles.label}>
         Sort by date posted
       </label>
       <select
         id={id}
-        className={styles.select}
+        className={`${fieldStyles.control} ${fieldStyles.dropdown}`}
         value={value}
         onChange={(event) => onChange(event.target.value as JobSort)}
       >
