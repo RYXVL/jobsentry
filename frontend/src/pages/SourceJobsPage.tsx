@@ -12,14 +12,14 @@ import { ErrorNotice, StatusMessage } from "../components/StatusMessage";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { formatJobCount, formatNumber, formatRelativeTime } from "../utils/format";
 import {
-  EMPTY_FILTERS,
   hasFilters,
   normalizeFilters,
   type JobFilterValues,
 } from "../utils/jobFilters";
 import styles from "./SourceJobsPage.module.css";
 
-const PAGE_SIZE = 50;
+/** Jobs shown per page (sent to the API as `limit`). */
+const PAGE_SIZE = 10;
 const DEFAULT_SORT: JobSort = "newest";
 
 /** Everything about the list that lives in the URL, so a view survives a
@@ -135,7 +135,7 @@ export function SourceJobsPage() {
       {jobs.isPending ? (
         <StatusMessage>
           {sourceInfo.data?.fetched_at === null
-            ? `Fetching jobs from ${company}'s career site for the first time. This can take a minute.`
+            ? `Fetching jobs from ${company} for the first time. This can take a minute.`
             : "Loading jobs…"}
         </StatusMessage>
       ) : jobs.isError ? (
