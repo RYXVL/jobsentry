@@ -6,7 +6,7 @@
 export interface Source {
   name: string;
   company: string;
-  strategy: string;
+  strategy: string; /** Which platform the jobs come from, e.g. "greenhouse". */
   homepage: string;
   /** ISO 8601 time of the last refresh, or null if never fetched. */
   fetched_at: string | null;
@@ -29,12 +29,9 @@ export interface Job {
   locations: string[];
   /** ISO 3166-1 alpha-2 codes, e.g. ["CA", "US"]. */
   countries: string[];
-  /** True if any location is remote. */
-  remote: boolean;
-  /** Only the modes the site states; empty if it doesn't say. */
+  /** Only the modes the source states; empty if it doesn't say. */
   work_modes: WorkMode[];
   employment_type: string | null;
-  tags: string[];
   /** ISO 8601: when the job was first published, null if unknown. */
   posted_at: string | null;
 }
@@ -49,21 +46,19 @@ export interface JobPage {
   jobs: Job[];
 }
 
-/** One filter value and how many saved jobs have it. */
+/** One value and how many saved jobs have it. */
 export interface FacetValue {
   value: string;
   count: number;
 }
 
-/** GET /sources/{source}/jobs/facets: every filter value in the saved jobs. */
+/** GET /sources/{source}/jobs/facets: values present in the saved jobs. */
 export interface JobFacets {
   source: string;
   teams: FacetValue[];
   locations: FacetValue[];
   /** Values are ISO country codes. */
   countries: FacetValue[];
-  employment_types: FacetValue[];
-  tags: FacetValue[];
 }
 
 export interface RefreshResult {
@@ -94,17 +89,12 @@ export interface ClearResult {
   cleared_sources: number;
 }
 
-/** Optional filters and order for GET /sources/{source}/jobs. */
+/** Optional filters, order and paging for GET /sources/{source}/jobs. */
 export interface JobListParams {
   /** Keywords: every word must appear in the title or a team name. */
   q?: string;
-  team?: string;
-  location?: string;
   /** ISO country codes; a job in any of them matches. */
   country?: string[];
-  remote?: boolean;
-  employment_type?: string;
-  tag?: string;
   /** Defaults to "newest" on the backend. */
   sort?: JobSort;
   limit?: number;
