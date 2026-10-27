@@ -1,0 +1,79 @@
+{
+  "api_base": "https://boards-api.greenhouse.io/v1/boards",
+  "board_base": "https://boards.greenhouse.io",
+  "sources": [
+    {
+      "name": "anthropic",
+      "company": "Anthropic",
+      "board_token": "anthropic",
+      "homepage": "https://www.anthropic.com/careers",
+      "country_hints": {
+        "San Francisco": "US",
+        "New York": "US",
+        "Seattle": "US",
+        "London": "GB",
+        "Dublin": "IE",
+        "Zurich": "CH",
+        "Paris": "FR",
+        "Munich": "DE",
+        "Tokyo": "JP",
+        "Seoul": "KR",
+        "Bengaluru": "IN",
+        "Sydney": "AU"
+      }
+    },
+    {
+      "name": "figma",
+      "company": "Figma",
+      "board_token": "figma",
+      "homepage": "https://www.figma.com/careers",
+      "country_hints": {
+        "San Francisco": "US",
+        "New York": "US",
+        "Seattle": "US",
+        "London": "GB",
+        "Berlin": "DE",
+        "Paris": "FR",
+        "Tokyo": "JP",
+        "Tel Aviv": "IL",
+        "São Paulo": "BR",
+        "Sydney": "AU"
+      }
+    },
+    {
+      "name": "stripe",
+      "company": "Stripe",
+      "board_token": "stripe",
+      "homepage": "https://stripe.com/careers/search",
+      "country_hints": {
+        "SF": "US",
+        "NYC": "US",
+        "CHI": "US",
+        "ATL": "US",
+        "SEA": "US",
+        "San Francisco": "US",
+        "New York": "US",
+        "Chicago": "US",
+        "Atlanta": "US",
+        "Seattle": "US",
+        "Washington DC": "US",
+        "Toronto": "CA",
+        "Dublin": "IE",
+        "London": "GB",
+        "Paris": "FR",
+        "Berlin": "DE",
+        "Amsterdam": "NL",
+        "Barcelona": "ES",
+        "Stockholm": "SE",
+        "Warsaw": "PL",
+        "Bucharest": "RO",
+        "Bengaluru": "IN",
+        "Tokyo": "JP",
+        "Taipei": "TW",
+        "Bangkok": "TH",
+        "Sydney": "AU",
+        "Melbourne": "AU"
+      }
+    }
+  ]
+}

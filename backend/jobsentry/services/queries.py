@@ -22,17 +22,12 @@ JOB_SORTS: tuple[JobSort, ...] = ("newest", "oldest")
 
 @dataclass(frozen=True)
 class JobQuery:
-    """Filters, order and paging for listing saved jobs. Every filter is
-    optional and case-insensitive; a job must satisfy all the filters that
-    are set. Jobs are sorted before paging, so every page follows one order."""
+    """Filters, order and paging for listing saved jobs. Both filters are
+    optional and case-insensitive; a job must satisfy every filter that is
+    set. Jobs are sorted before paging, so every page follows one order."""
 
     text: str | None = None             # keywords: every word must be in the title or a team
-    team: str | None = None             # exact team name
-    location: str | None = None         # substring of any location
     countries: tuple[str, ...] = ()     # ISO codes; a job in ANY of them matches
-    remote: bool | None = None          # True = remote only, False = on-site only
-    employment_type: str | None = None  # exact, e.g. "Full time"
-    tag: str | None = None              # exact tag name
     sort: JobSort = "newest"            # by date posted
     limit: int = 50
     offset: int = 0
@@ -50,17 +45,7 @@ class JobQuery:
     def matches(self, job: Job) -> bool:
         if self.text and not _has_keywords(job, self.text):
             return False
-        if self.team and not _contains_exact(job.teams, self.team):
-            return False
-        if self.location and not any(self.location.lower() in loc.lower() for loc in job.locations):
-            return False
         if self.countries and not set(self.countries) & set(job.countries):
-            return False
-        if self.remote is not None and job.remote != self.remote:
-            return False
-        if self.employment_type and (job.employment_type or "").lower() != self.employment_type.lower():
-            return False
-        if self.tag and not _contains_exact(job.tags, self.tag):
             return False
         return True
 
@@ -83,10 +68,6 @@ def _has_keywords(job: Job, text: str) -> bool:
     title or one of its team names (case-insensitive, partial words count)."""
     fields = [job.title.lower(), *(team.lower() for team in job.teams)]
     return all(any(word in f for f in fields) for word in text.lower().split())
-
-def _contains_exact(values: list[str], wanted: str) -> bool:
-    wanted = wanted.lower()
-    return any(v.lower() == wanted for v in values)
 
 def _parse_time(value: str | None) -> datetime | None:
     """Parse an ISO 8601 time so times in different zones compare correctly.
@@ -117,14 +98,14 @@ class FacetValue:
 
 @dataclass
 class JobFacets:
-    """Every filter value present in the saved jobs, with how many jobs have it."""
+    """Values present in the saved jobs, with how many jobs have each.
+    `countries` feeds the country filter; `teams` and `locations` help when
+    writing a catalog's country_hints."""
 
     source: str
     teams: list[FacetValue]
     locations: list[FacetValue]
     countries: list[FacetValue]       # ISO codes
-    employment_types: list[FacetValue]
-    tags: list[FacetValue]
 
 @dataclass(frozen=True)
 class SourceStatus:

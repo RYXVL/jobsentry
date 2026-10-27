@@ -30,9 +30,8 @@ DEFAULT_HEADERS = {
 #: Client errors (400, 403, 404, ...) are excluded because retrying can't fix them.
 RETRY_STATUS_CODES = (429, 500, 502, 503, 504)
 
-#: Methods safe to retry. POST is included because every POST this app sends is
-#: a read-only search query (e.g. Workday), so sending it twice has no side effects.
-RETRY_METHODS = ("GET", "POST")
+#: Methods safe to retry. Every request this app sends is a read-only GET.
+RETRY_METHODS = ("GET",)
 
 #: Responses meaning "we don't want automated access". Never retried or bypassed.
 BLOCKED_STATUS_CODES = (401, 403)
@@ -79,11 +78,7 @@ class HttpClient:
             raise SourceError(f"{method} {url} failed: {e}") from e
         return response
 
-    def get_text(self, url: str, **kwargs: Any) -> str:
-        return self.request("GET", url, **kwargs).text
-
     def get_json(self, url: str, **kwargs: Any) -> Any:
+        """GET `url` and parse the body as JSON. An unreadable body raises
+        ValueError; callers turn that into SourceError with context."""
         return self.request("GET", url, **kwargs).json()
-
-    def post_json(self, url: str, **kwargs: Any) -> Any:
-        return self.request("POST", url, **kwargs).json()

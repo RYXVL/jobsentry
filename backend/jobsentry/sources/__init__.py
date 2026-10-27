@@ -1,9 +1,10 @@
-"""Job sources: one class per company.
+"""Job sources: one per company, built from catalogs.
 
     base.py        JobSource, the interface every source implements
     registry.py    finds and creates sources by name
-    strategies/    reusable base classes, one per way a site delivers data
-    companies/     concrete sources; any module here is loaded automatically
+    strategies/    reusable base classes, one per job board platform
+    catalogs/      JSON lists of companies, one file per platform
+    loaders/       read catalogs/ and register a source for every entry
 """
 
 from .base import JobSource, SourceInfo

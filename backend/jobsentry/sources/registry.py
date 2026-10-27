@@ -1,14 +1,15 @@
 """Maps source names to source classes.
 
-Sources register themselves with @register. Modules in sources/companies/
-are imported automatically the first time the registry is used, so adding a
-company means adding one file and nothing else.
+Sources come from catalogs: JSON files in sources/catalogs/, one per job
+board platform, read by the loaders in sources/loaders/. Each catalog entry
+becomes a source class registered here, so adding a company means adding
+one catalog entry and nothing else. Catalogs are loaded once, the first time
+the registry is used.
 """
 
 from __future__ import annotations
 
-import importlib
-import pkgutil
+import threading
 
 from ..core.exceptions import SourceNotFoundError
 from ..core.http import HttpClient
@@ -16,9 +17,13 @@ from .base import JobSource, SourceInfo
 
 _REGISTRY: dict[str, type[JobSource]] = {}
 _discovered = False
+# The API serves requests on several threads; loading twice at once would
+# register every source twice and fail.
+_discover_lock = threading.Lock()
 
 def register(cls: type[JobSource]) -> type[JobSource]:
-    """Class decorator that makes a source available by its `name`."""
+    """Make a source available by its `name`. Used by the loaders, and usable
+    as a class decorator for a hand-written source."""
     name = getattr(cls, "name", None)
     if not name or not getattr(cls, "company", None):
         raise TypeError(f"{cls.__name__} must define `name` and `company`")
@@ -28,16 +33,23 @@ def register(cls: type[JobSource]) -> type[JobSource]:
     return cls
 
 def _discover() -> None:
-    """Import every module in sources/companies/ so their @register runs."""
+    """Load every catalog, once. If loading fails (e.g. a bad catalog), the
+    registry is left empty so the next call reports the same error again
+    rather than a confusing duplicate-name error."""
     global _discovered
     if _discovered:
         return
-    from . import companies
+    with _discover_lock:
+        if _discovered:
+            return
+        from .loaders import load_all
 
-    for module in pkgutil.iter_modules(companies.__path__):
-        if not module.name.startswith("_"):
-            importlib.import_module(f"{companies.__name__}.{module.name}")
-    _discovered = True
+        try:
+            load_all()
+        except Exception:
+            _REGISTRY.clear()
+            raise
+        _discovered = True
 
 def get_source_class(name: str) -> type[JobSource]:
     _discover()

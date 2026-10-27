@@ -8,7 +8,7 @@ from .exceptions import (
     SourceNotFoundError,
 )
 from .http import HttpClient
-from .models import Job, JobDetails, JobSnapshot, Salary
+from .models import Job, JobDetails, JobSnapshot
 
 __all__ = [
     "ConfigError",
@@ -19,7 +19,6 @@ __all__ = [
     "JobSnapshot",
     "JobsentryError",
     "RefreshInProgressError",
-    "Salary",
     "SourceBlockedError",
     "SourceError",
     "SourceNotFoundError",

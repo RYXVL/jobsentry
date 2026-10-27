@@ -1,12 +1,11 @@
-"""Reusable base classes, one per way a site delivers its job data.
+"""Reusable base classes, one per job board platform. The loaders in
+sources/loaders/ build a subclass of one of these for every catalog entry.
 
-Company sources subclass one of these so they only describe what is unique
-about their site. Planned additions as new companies need them:
-    json_api.py     REST endpoints returning JSON (Lever, Ashby, ...)
-    greenhouse.py   Greenhouse public board API
-    workday.py      Workday's POST-based job search
-    json_ld.py      schema.org JobPosting blocks in HTML
+    greenhouse.py   Greenhouse's public board API
+
+Planned: ashby.py (Ashby's public job board API), lever.py (Lever's postings API).
 """
-from .next_data import NextDataSource, extract_next_data
 
-__all__ = ["NextDataSource", "extract_next_data"]
+from .greenhouse import GreenhouseSource
+
+__all__ = ["GreenhouseSource"]

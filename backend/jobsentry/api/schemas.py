@@ -19,7 +19,7 @@ class HealthOut(Schema):
 class SourceOut(Schema):
     name: str = Field(examples=["stripe"])
     company: str = Field(examples=["Stripe"])
-    strategy: str = Field(description="How the site delivers data, e.g. next_data")
+    strategy: str = Field(description="Which platform the jobs come from, e.g. greenhouse")
     homepage: str
     fetched_at: str | None = Field(None, description="Last refresh (ISO 8601), null if never")
     job_count: int | None = Field(None, description="Jobs in the last refresh, null if never")
@@ -33,24 +33,15 @@ class JobOut(Schema):
     teams: list[str]
     locations: list[str]
     countries: list[str] = Field(description="ISO 3166-1 alpha-2 codes, e.g. CA, US")
-    remote: bool = Field(description="True if any location is remote")
     work_modes: list[str] = Field(
-        description="Any of on_site, hybrid, remote; empty if the site doesn't say"
+        description="Any of on_site, hybrid, remote; empty if the source doesn't say"
     )
     employment_type: str | None
-    tags: list[str]
     posted_at: str | None = Field(description="When the job was first published (ISO 8601)")
-
-class SalaryOut(Schema):
-    min: float | None
-    max: float | None
-    currency: str | None
-    period: str | None
 
 class JobDetailsOut(JobOut):
     description: str
     description_format: str = Field(description="markdown, html or text")
-    salary: SalaryOut | None
     apply_url: str | None
 
 class JobPageOut(Schema):
@@ -70,8 +61,6 @@ class JobFacetsOut(Schema):
     teams: list[FacetValueOut]
     locations: list[FacetValueOut]
     countries: list[FacetValueOut] = Field(description="ISO country codes with job counts")
-    employment_types: list[FacetValueOut]
-    tags: list[FacetValueOut]
 
 class RefreshOut(Schema):
     source: str
