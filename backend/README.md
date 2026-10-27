@@ -29,8 +29,9 @@ backend/
 │   ├── sources/                 where jobs come from
 │   │   ├── base.py              JobSource interface
 │   │   ├── registry.py          register(), create_source(), loads the catalogs
-│   │   ├── catalogs/            JSON lists of companies, one file per platform
-│   │   │   └── greenhouse-sources.json
+│   │   ├── catalogs/            JSON data, read by the loaders
+│   │   │   ├── country-hints.json        city -> country, shared by every source
+│   │   │   └── greenhouse-sources.json   companies on Greenhouse
 │   │   ├── loaders/             read a catalog, register a source per entry
 │   │   │   ├── _catalog.py      shared reading and validation helpers
 │   │   │   └── greenhouse_loader.py
@@ -95,7 +96,7 @@ Companies are data, not code. For a company on Greenhouse:
   "company": "Acme",
   "board_token": "acme",
   "homepage": "https://acme.example/careers",
-  "country_hints": { "Toronto": "CA", "SF": "US" }
+  "country_hints": { "SF": "US" }
 }
 ```
 
@@ -105,13 +106,17 @@ Companies are data, not code. For a company on Greenhouse:
 | `company` | yes | display name |
 | `board_token` | yes | the board's token on Greenhouse |
 | `homepage` | no | careers page; defaults to the Greenhouse board |
-| `country_hints` | no | location text → ISO country code, for places listed without a country |
+| `country_hints` | no | hints for this company only, added to (and overriding) the shared list |
 
 4. Restart the API (or just run the CLI), then refresh the new source.
-5. With the API running, open `http://127.0.0.1:8000/api/v1/sources/<name>/jobs/facets` and compare `locations` with `countries`. Add a `country_hints` entry for any location whose country wasn't found.
+5. With the API running, open `http://127.0.0.1:8000/api/v1/sources/<name>/jobs/facets` and compare `locations` with `countries`. For each location whose country wasn't found:
+   - **A city** (e.g. "Lisbon") goes in `sources/catalogs/country-hints.json`, in alphabetical order, so every company benefits.
+   - **A company's own shorthand** (e.g. Stripe's "CHI" or "SEA") goes in that entry's `country_hints`, because it could mean something else on another board.
 6. Optionally add a logo at `frontend/public/logos/<name>.png` (or `.jpg`). Without one, the card shows the company's initials.
 
-The catalog is checked when it loads. A missing or unknown key, a duplicate `name`, or a bad URL or country code stops with a `ConfigError` naming the file and entry, so a typo never silently drops a company.
+Country names themselves ("Canada", "United Kingdom") are recognised without any hints; see `COUNTRY_NAMES` in `core/countries.py`.
+
+The catalogs are checked when they load. A missing or unknown key, a duplicate `name`, or a bad URL or country code stops with a `ConfigError` naming the file and entry, so a typo never silently drops a company.
 
 ## Adding a platform
 
@@ -119,7 +124,7 @@ A platform (e.g. Ashby) needs three pieces:
 
 1. **A strategy** in `sources/strategies/<platform>.py`: a `JobSource` subclass that sets `strategy = "<platform>"`, declares its settings as class attributes, and implements `fetch_jobs()` and `fetch_job_details(job)` against the platform's public API. Export it from `sources/strategies/__init__.py`.
 2. **A catalog** in `sources/catalogs/<platform>-sources.json`: the API base URLs once at the top, plus a `sources` list.
-3. **A loader** in `sources/loaders/<platform>_loader.py`: a `load()` function that validates the catalog with the helpers in `_catalog.py`, builds one subclass per entry and registers them all. Add it to `LOADERS` in `sources/loaders/__init__.py`.
+3. **A loader** in `sources/loaders/<platform>_loader.py`: a `load()` function that validates the catalog with the helpers in `_catalog.py` (including `read_country_hints()` for the shared hints), builds one subclass per entry and registers them all. Add it to `LOADERS` in `sources/loaders/__init__.py`.
 
 Rules for strategies: always output IDs as strings; fill only what the platform states (leave `work_modes` or `countries` empty rather than guessing); use `CountryFinder` for free-text locations; put anything needed later in `Job.extra`; raise `SourceError` when a response doesn't look as expected; use `self.http.get_json()` rather than `requests` directly.
 
@@ -163,7 +168,7 @@ Example:
 GET /api/v1/sources/stripe/jobs?q=engineer&country=CA&country=US&sort=oldest&limit=20
 ```
 
-`/facets` reads saved data only: `countries` feeds the country filter, and `locations` shows which places still need a `country_hints` entry. Add `?refresh=true` to the details endpoint to fetch a job again.
+`/facets` reads saved data only: `countries` feeds the country filter, and `locations` shows which places still need a country hint. Add `?refresh=true` to the details endpoint to fetch a job again.
 
 **Caching rules.** GET endpoints never fetch on their own, except the first time a source has no saved data. Only `POST .../refresh` (or `?refresh=true` on a job) contacts the job board again, so browsing in the UI sends no traffic to companies. Two refreshes of the same source can't run at once; the second gets a 409.
 
