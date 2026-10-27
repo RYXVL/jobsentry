@@ -14,16 +14,16 @@ name, company, homepage, board_token, api_base, board_base, country_hints.
 
 A refresh is one request. How Greenhouse's fields map onto Job:
 
-    title, absolute_url, first_published  -> title, url, posted_at
+    title, absolute_url                   -> title, url
+    first_published, updated_at           -> posted_at, updated_at
     departments[].name                    -> teams
     location.name (free text)             -> locations, split on • ; |
     country names in the locations        -> countries (plus country_hints)
     "Remote" / "Hybrid" in the locations  -> work_modes (only when stated)
     metadata "Employment Type" (if set)   -> employment_type
 
-Only first_published is used for dates. Greenhouse's updated_at changes
-whenever anything in a job's record changes, including bulk edits across a
-whole board, so it doesn't reliably mean the posting itself changed.
+updated_at changes whenever anything in a job's record changes, including
+bulk edits across a whole board, so many jobs can share one updated time.
 
 Descriptions are HTML. Sanitise them before rendering them in the frontend.
 """
@@ -107,6 +107,7 @@ class GreenhouseSource(JobSource):
             description=html.unescape(item.get("content") or "").strip(),
             description_format="html",
             posted_at=item.get("first_published") or job.posted_at,
+            updated_at=item.get("updated_at") or job.updated_at,
             apply_url=item.get("absolute_url") or job.url,
         )
 
@@ -152,6 +153,7 @@ class GreenhouseSource(JobSource):
             work_modes=sort_work_modes(modes),
             employment_type=_metadata_value(item, EMPLOYMENT_TYPE_FIELDS),
             posted_at=item.get("first_published"),
+            updated_at=item.get("updated_at"),
         )
 
 def _metadata_value(item: dict[str, Any], names: frozenset[str]) -> str | None:

@@ -23,6 +23,7 @@ def format_details(d: JobDetails) -> str:
         f"Countries: {', '.join(d.countries) or '-'}",
         f"Mode:      {modes or '-'}",
         f"Type:      {d.employment_type or '-'}",
+        f"Updated:   {d.updated_at or '-'}",
         f"Posted:    {d.posted_at or '-'}",
         f"Apply:     {d.apply_url or d.url}",
     ]

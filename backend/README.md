@@ -55,7 +55,7 @@ backend/
 │       ├── output.py            shared output formatting
 │       └── commands/            one class per command: sources, list, show
 ├── .env                         local settings (git-ignored)
-├── .env.example                 settings template
+├── .env.example                 settings template (committed)
 └── data/                        generated output (git-ignored)
 ```
 
@@ -223,22 +223,23 @@ New settings go in `config.py` (a field on `Settings` plus a line in `from_env`)
   "jobs": [
     {
       "source": "stripe",
-      "id": "7844214",
-      "title": "AEO and GEO Marketing Manager",
-      "url": "https://stripe.com/jobs/search?gh_jid=7844214",
+      "id": "8172508",
+      "title": "Abuse Investigator",
+      "url": "https://stripe.com/jobs/search?gh_jid=8172508",
       "company": "Stripe",
-      "teams": ["Marketing"],
-      "locations": ["Remote in the US"],
-      "countries": ["US"],
-      "work_modes": ["remote"],
+      "teams": ["Risk & Financial Crimes"],
+      "locations": ["Dublin"],
+      "countries": ["IE"],
+      "work_modes": [],
       "employment_type": null,
-      "posted_at": "2026-04-23T14:21:56-04:00",
+      "posted_at": "2026-09-03T13:32:53-04:00",
+      "updated_at": "2026-10-22T09:16:15-04:00",
       "extra": {}
     }
   ]
 }
 ```
 
-`work_modes` holds any of `on_site`, `hybrid` and `remote`, only when the source states them; `countries` holds ISO 3166-1 alpha-2 codes. Files saved by older versions still load: unknown fields are ignored and missing ones get defaults.
+`work_modes` holds any of `on_site`, `hybrid` and `remote`, only when the source states them; `countries` holds ISO 3166-1 alpha-2 codes. `updated_at` is when the platform last changed the job's record, which includes bulk edits across a whole board, so many jobs can share one value. Files saved by older versions still load: unknown fields are ignored and missing ones get defaults.
 
 `data/<source>/jobs/<id>.json` holds every `Job` field plus `description`, `description_format` (`html` for Greenhouse) and `apply_url`.

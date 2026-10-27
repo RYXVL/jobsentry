@@ -4,8 +4,8 @@ import styles from "./JobList.module.css";
 
 /**
  * One glass card per job: title, locations and work mode on the left, the
- * posting date on the right. The whole card links to the company's own
- * posting (in a new tab) until there is a details page.
+ * dates on the right. The whole card links to the company's own posting (in
+ * a new tab) until there is a details page.
  */
 export function JobList({ jobs }: { jobs: Job[] }) {
   return (
@@ -22,16 +22,46 @@ export function JobList({ jobs }: { jobs: Job[] }) {
                 <span className={styles.meta}>Mode: {formatWorkModes(job.work_modes)}</span>
               )}
             </span>
-            {job.posted_at && (
-              <span className={styles.posted}>
-                <span className={styles.label}>Posted</span>{" "}
-                <time dateTime={job.posted_at}>{formatDate(job.posted_at)}</time>
-              </span>
-            )}
+            <JobDates job={job} />
             <span className="visually-hidden"> (opens the posting in a new tab)</span>
           </a>
         </li>
       ))}
     </ul>
+  );
+}
+
+/** True if two ISO 8601 times are the same moment, even when written with
+ *  different zone offsets. Unreadable times fall back to comparing the text. */
+function sameMoment(a: string, b: string): boolean {
+  const timeA = new Date(a).getTime();
+  const timeB = new Date(b).getTime();
+  if (Number.isNaN(timeA) || Number.isNaN(timeB)) return a === b;
+  return timeA === timeB;
+}
+
+/** "Updated" above "Posted". Updated is shown whenever it differs from the
+ *  posted time (a job never changed since posting has the two equal).
+ *  Renders nothing if neither date is known. */
+function JobDates({ job }: { job: Job }) {
+  const { posted_at: posted, updated_at: updated } = job;
+  const showUpdated = updated != null && (posted == null || !sameMoment(updated, posted));
+
+  if (posted == null && !showUpdated) return null;
+
+  return (
+    <span className={styles.dates}>
+      {showUpdated && <DateLine label="Updated" iso={updated} />}
+      {posted != null && <DateLine label="Posted" iso={posted} />}
+    </span>
+  );
+}
+
+function DateLine({ label, iso }: { label: string; iso: string }) {
+  return (
+    <span>
+      <span className={styles.label}>{label}</span>{" "}
+      <time dateTime={iso}>{formatDate(iso)}</time>
+    </span>
   );
 }

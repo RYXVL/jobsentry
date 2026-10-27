@@ -47,6 +47,7 @@ class Job:
     work_modes: list[str] = field(default_factory=list)  # see WORK_MODES
     employment_type: str | None = None
     posted_at: str | None = None          # ISO 8601: when the job was first published
+    updated_at: str | None = None         # ISO 8601: when the platform last changed the job
     extra: dict[str, Any] = field(default_factory=dict)  # platform-specific values
 
     def to_dict(self) -> dict[str, Any]:

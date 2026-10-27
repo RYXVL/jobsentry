@@ -38,6 +38,9 @@ class JobOut(Schema):
     )
     employment_type: str | None
     posted_at: str | None = Field(description="When the job was first published (ISO 8601)")
+    updated_at: str | None = Field(
+        description="When the platform last changed the job (ISO 8601); can reflect bulk edits"
+    )
 
 class JobDetailsOut(JobOut):
     description: str

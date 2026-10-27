@@ -6,7 +6,8 @@
 export interface Source {
   name: string;
   company: string;
-  strategy: string; /** Which platform the jobs come from, e.g. "greenhouse". */
+  /** Which platform the jobs come from, e.g. "greenhouse". */
+  strategy: string;
   homepage: string;
   /** ISO 8601 time of the last refresh, or null if never fetched. */
   fetched_at: string | null;
@@ -34,6 +35,9 @@ export interface Job {
   employment_type: string | null;
   /** ISO 8601: when the job was first published, null if unknown. */
   posted_at: string | null;
+  /** ISO 8601: when the platform last changed the job, null if unknown.
+   *  Can reflect bulk edits, so many jobs may share one time. */
+  updated_at: string | null;
 }
 
 export interface JobPage {
