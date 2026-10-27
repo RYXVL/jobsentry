@@ -1,36 +1,40 @@
 # Job Sentry
 
-Collects job listings from company career sites and serves them to a local web UI.
+Collects job listings from companies' public job board APIs and shows them
+in a local web UI, newest first.
+
+Requires Python 3.10+ and Node 18+.
 
 ## Setup
 
 ```bash
 pip install -r requirements.txt
-cp backend/.env.example backend/.env
-```
 
-Set environment variables inside backend/.env as required.
+# Adjust environment variables as needed after copying files.
+cp backend/.env.example backend/.env
+cd frontend && npm install && cp .env.example .env.
+```
 
 ## Usage
 
 Run from the `backend/` folder:
 
 ```bash
-cd backend
-python -m jobsentry sources                      # list available sources
-python -m jobsentry list <company_name>          # fetch all jobs -> data/<company_name>/jobs.json
-python -m jobsentry show <company_name> <job_id> # one job by ID -> data/<company_name>/jobs/<job_id>.json
+python -m jobsentry sources                 # list available sources
+python -m jobsentry list <source>           # fetch all jobs -> data/<source>/jobs.json
+python -m jobsentry show <source> <job_id>  # one job -> data/<source>/jobs/<job_id>.json
+python -m jobsentry.api                     # API on http://127.0.0.1:8000, docs at /docs
 ```
 
-Start the API for the frontend (also from `backend/`):
+From `frontend/`, with the API running:
 
 ```bash
-python -m jobsentry.api            # http://127.0.0.1:8000, docs at /docs
-python -m jobsentry.api --reload   # auto-restart on code changes
+npm run dev                                 # web UI on http://localhost:5173
 ```
 
-Tests: `cd backend && python -m pytest`
+## Adding a company
 
-Requires Python 3.10+.
-
-See [backend/README.md](backend/README.md) for the architecture and how to add a company.
+Companies are entries in a JSON catalog, not code. See
+[backend/README.md](backend/README.md#adding-a-company) 
+for the steps, the rules for choosing sources, and the 
+architecture.
