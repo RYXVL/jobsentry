@@ -5,9 +5,9 @@ no country codes (Greenhouse, Lever, Ashby, ...).
     finder.find(["London, United Kingdom", "Remote - Canada", "Toronto"])
     -> ["CA", "GB"]
 
-Country names match whole words in any case. A few abbreviations (US, USA,
-UK, UAE) match only in capitals, so ordinary words like "us" never count.
-A city on its own gives nothing unless a source adds a hint for it.
+Country names match whole words in any case. A few abbreviations (US, U.S.,
+USA, UK, U.K., UAE) match only in capitals, so ordinary words like "us"
+never count. A city on its own gives nothing unless a hint names it.
 """
 
 from __future__ import annotations
@@ -35,16 +35,24 @@ COUNTRY_NAMES: dict[str, str] = {
     "Egypt": "EG", "Turkey": "TR",
 }
 
-#: Abbreviations matched only in capitals ("Remote US", "London, UK").
-COUNTRY_ABBREVIATIONS: dict[str, str] = {"US": "US", "USA": "US", "UK": "GB", "UAE": "AE"}
+#: Abbreviations matched only in capitals ("Remote US", "London, U.K.").
+COUNTRY_ABBREVIATIONS: dict[str, str] = {
+    "US": "US", "U.S.": "US", "USA": "US",
+    "UK": "GB", "U.K.": "GB",
+    "UAE": "AE",
+}
 
 def _whole_words(words: Iterable[str], flags: int = 0) -> re.Pattern[str] | None:
     """One regex matching any of `words` as whole words, longest first so
-    "United States of America" wins over "United States"."""
+    "United States of America" wins over "United States".
+
+    "Whole word" means not directly next to a letter or digit. This is used
+    instead of \\b so that words ending in punctuation ("U.S.") still match
+    at the end of the text, where \\b would find no boundary."""
     alternatives = sorted({w for w in words if w}, key=len, reverse=True)
     if not alternatives:
         return None
-    return re.compile(r"\b(" + "|".join(map(re.escape, alternatives)) + r")\b", flags)
+    return re.compile(r"(?<!\w)(" + "|".join(map(re.escape, alternatives)) + r")(?!\w)", flags)
 
 _NAMES_RE = _whole_words(COUNTRY_NAMES, re.IGNORECASE)
 _NAMES = {name.lower(): code for name, code in COUNTRY_NAMES.items()}

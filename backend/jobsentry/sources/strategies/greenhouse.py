@@ -44,8 +44,9 @@ from ..base import JobSource
 #: usually separate a city from its state or country.
 _LOCATION_SEPARATORS = re.compile(r"\s*(?:•|;|\|)\s*")
 
-#: Location text that means "no location given".
-_NO_LOCATION = frozenset({"n/a", "na", "tbd", "-"})
+#: Location text that means "no location given" (compared lower-case),
+#: including placeholders boards leave unfilled, like "LOCATION".
+_NO_LOCATION = frozenset({"n/a", "na", "tbd", "-", "location"})
 
 _REMOTE = re.compile(r"\bremote\b", re.IGNORECASE)
 _HYBRID = re.compile(r"\bhybrid\b", re.IGNORECASE)
