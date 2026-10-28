@@ -18,14 +18,21 @@
       "name": "stripe",
       "company": "Stripe",
       "board_token": "stripe",
-      "homepage": "https://stripe.com/careers/search",
+      "homepage": "https://stripe.com/careers",
       "country_hints": {
         "ATL": "US",
+        "CA-Remote": "CA",
         "CHI": "US",
         "NYC": "US",
         "SEA": "US",
         "SF": "US"
       }
+    },
+    {
+      "name": "affirm",
+      "company": "Affirm",
+      "board_token": "affirm",
+      "homepage": "https://www.affirm.com/careers"
     }
   ]
 }
