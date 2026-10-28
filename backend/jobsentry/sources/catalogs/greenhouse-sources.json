@@ -33,6 +33,69 @@
       "company": "Affirm",
       "board_token": "affirm",
       "homepage": "https://www.affirm.com/careers"
+    },
+    {
+      "name": "airbnb",
+      "company": "Airbnb",
+      "board_token": "airbnb",
+      "homepage": "https://www.airbnb.com/careers"
+    },
+    {
+      "name": "cloudflare",
+      "company": "Cloudflare",
+      "board_token": "cloudflare",
+      "homepage": "https://www.cloudflare.com/careers"
+    },
+    {
+      "name": "coinbase",
+      "company": "Coinbase",
+      "board_token": "coinbase",
+      "homepage": "https://www.coinbase.com/careers"
+    },
+    {
+      "name": "databricks",
+      "company": "Databricks",
+      "board_token": "databricks",
+      "homepage": "https://www.databricks.com/careers",
+      "country_hints": {
+        "Georgia": "US"
+      }
+    },
+    {
+      "name": "discord",
+      "company": "Discord",
+      "board_token": "discord",
+      "homepage": "https://www.discord.com/careers"
+    },
+    {
+      "name": "gitlab",
+      "company": "GitLab",
+      "board_token": "gitlab",
+      "homepage": "https://www.about.gitlab.com/jobs/"
+    },
+    {
+      "name": "instacart",
+      "company": "Instacart",
+      "board_token": "instacart",
+      "homepage": "https://www.instacart.com/careers"
+    },
+    {
+      "name": "lyft",
+      "company": "Lyft",
+      "board_token": "lyft",
+      "homepage": "https://www.lyft.com/careers"
+    },
+    {
+      "name": "pinterest",
+      "company": "Pinterest",
+      "board_token": "pinterest",
+      "homepage": "https://www.pinterest.com/careers"
+    },
+    {
+      "name": "robinhood",
+      "company": "Robinhood",
+      "board_token": "robinhood",
+      "homepage": "https://www.robinhood.com/careers"
     }
   ]
 }
