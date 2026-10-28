@@ -5,9 +5,10 @@ no country codes (Greenhouse, Lever, Ashby, ...).
     finder.find(["London, United Kingdom", "Remote - Canada", "Toronto"])
     -> ["CA", "GB"]
 
-Country names match whole words in any case. A few abbreviations (US, U.S.,
-USA, UK, U.K., UAE) match only in capitals, so ordinary words like "us"
-never count. A city on its own gives nothing unless a hint names it.
+Country names and US state names match whole words in any case. A few
+abbreviations (US, U.S., USA, UK, U.K., UAE) match only in capitals, so
+ordinary words like "us" never count. A city on its own gives nothing
+unless a hint names it.
 """
 
 from __future__ import annotations
@@ -22,18 +23,33 @@ from .models import normalize_countries
 COUNTRY_NAMES: dict[str, str] = {
     "United States": "US", "United States of America": "US",
     "United Kingdom": "GB", "Great Britain": "GB", "England": "GB", "Scotland": "GB",
-    "Ireland": "IE", "Canada": "CA", "Mexico": "MX", "Brazil": "BR", "Argentina": "AR",
-    "Colombia": "CO", "Chile": "CL", "Germany": "DE", "France": "FR", "Netherlands": "NL",
-    "Spain": "ES", "Portugal": "PT", "Italy": "IT", "Poland": "PL", "Romania": "RO",
-    "Sweden": "SE", "Denmark": "DK", "Norway": "NO", "Finland": "FI", "Switzerland": "CH",
+    "Ireland": "IE", "Canada": "CA", "Mexico": "MX", "Costa Rica": "CR", "Brazil": "BR",
+    "Argentina": "AR", "Colombia": "CO", "Chile": "CL", "Germany": "DE", "France": "FR",
+    "Netherlands": "NL", "Spain": "ES", "Portugal": "PT", "Italy": "IT", "Poland": "PL",
+    "Romania": "RO", "Serbia": "RS", "Slovenia": "SI", "Lithuania": "LT", "Sweden": "SE",
+    "Denmark": "DK", "Norway": "NO", "Finland": "FI", "Switzerland": "CH",
     "Belgium": "BE", "Austria": "AT", "Luxembourg": "LU", "Czech Republic": "CZ",
-    "Czechia": "CZ", "Israel": "IL", "United Arab Emirates": "AE", "India": "IN",
-    "Singapore": "SG", "Japan": "JP", "South Korea": "KR", "Korea": "KR", "China": "CN",
-    "Hong Kong": "HK", "Taiwan": "TW", "Australia": "AU", "New Zealand": "NZ",
-    "Indonesia": "ID", "Philippines": "PH", "Thailand": "TH", "Vietnam": "VN",
-    "Malaysia": "MY", "South Africa": "ZA", "Nigeria": "NG", "Kenya": "KE",
-    "Egypt": "EG", "Turkey": "TR",
+    "Czechia": "CZ", "Cyprus": "CY", "Israel": "IL", "United Arab Emirates": "AE",
+    "India": "IN", "Singapore": "SG", "Japan": "JP", "South Korea": "KR", "Korea": "KR",
+    "China": "CN", "Hong Kong": "HK", "Taiwan": "TW", "Australia": "AU",
+    "New Zealand": "NZ", "Indonesia": "ID", "Philippines": "PH", "Thailand": "TH",
+    "Vietnam": "VN", "Malaysia": "MY", "South Africa": "ZA", "Nigeria": "NG",
+    "Kenya": "KE", "Egypt": "EG", "Turkey": "TR",
 }
+
+#: US state names, all meaning the US. Georgia is left out because it's
+#: also a country (GE); use a company's country_hints for "Georgia".
+US_STATE_NAMES: tuple[str, ...] = (
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+    "Connecticut", "Delaware", "District of Columbia", "Florida", "Hawaii",
+    "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana",
+    "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+    "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+    "New Mexico", "New York State", "North Carolina", "North Dakota", "Ohio",
+    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+    "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia",
+    "Washington", "West Virginia", "Wisconsin", "Wyoming",
+)
 
 #: Abbreviations matched only in capitals ("Remote US", "London, U.K.").
 COUNTRY_ABBREVIATIONS: dict[str, str] = {
@@ -42,9 +58,13 @@ COUNTRY_ABBREVIATIONS: dict[str, str] = {
     "UAE": "AE",
 }
 
+#: Every name matched in any case: countries plus US states.
+_ALL_NAMES: dict[str, str] = {**COUNTRY_NAMES, **{state: "US" for state in US_STATE_NAMES}}
+
 def _whole_words(words: Iterable[str], flags: int = 0) -> re.Pattern[str] | None:
     """One regex matching any of `words` as whole words, longest first so
-    "United States of America" wins over "United States".
+    "United States of America" wins over "United States", and "New Mexico"
+    over "Mexico".
 
     "Whole word" means not directly next to a letter or digit. This is used
     instead of \\b so that words ending in punctuation ("U.S.") still match
@@ -54,8 +74,8 @@ def _whole_words(words: Iterable[str], flags: int = 0) -> re.Pattern[str] | None
         return None
     return re.compile(r"(?<!\w)(" + "|".join(map(re.escape, alternatives)) + r")(?!\w)", flags)
 
-_NAMES_RE = _whole_words(COUNTRY_NAMES, re.IGNORECASE)
-_NAMES = {name.lower(): code for name, code in COUNTRY_NAMES.items()}
+_NAMES_RE = _whole_words(_ALL_NAMES, re.IGNORECASE)
+_NAMES = {name.lower(): code for name, code in _ALL_NAMES.items()}
 _ABBREVIATIONS_RE = _whole_words(COUNTRY_ABBREVIATIONS)
 
 class CountryFinder:
@@ -71,7 +91,8 @@ class CountryFinder:
         """ISO codes for every country found in `texts`, sorted, no duplicates."""
         codes: list[str] = []
         for text in texts:
-            codes += [_NAMES[m.lower()] for m in _NAMES_RE.findall(text)]
+            if _NAMES_RE:
+                codes += [_NAMES[m.lower()] for m in _NAMES_RE.findall(text)]
             if _ABBREVIATIONS_RE:
                 codes += [COUNTRY_ABBREVIATIONS[m] for m in _ABBREVIATIONS_RE.findall(text)]
             if self._hints_re:
