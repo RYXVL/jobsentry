@@ -1,19 +1,22 @@
 """List a source's saved locations that match no country.
 
 Checks every location in a source's saved jobs against its current country
-hints (catalogs/country-hints.json plus the source's own country_hints) and
-prints the ones that match nothing, most-used first. Hints are read fresh
-from the catalogs, so edit them and run this again without refreshing.
+settings (catalogs/country-hints.json, the source's own country_hints, and
+its state_codes setting) and prints the ones that match nothing, most-used
+first. Settings are read fresh from the catalogs, so edit them and run this
+again without refreshing.
 
 Usage, from backend/:
 
     python scripts/missing_countries.py stripe
     python scripts/missing_countries.py stripe --file path/to/jobs.json
 
-Where to add a hint for each location it prints:
-    a city ("Lisbon")                 -> catalogs/country-hints.json
-    a company's shorthand ("CHI")     -> that source's country_hints
-    a shared hint wrong for a company -> that source's country_hints (overrides)
+Where to fix each location it prints:
+    a country name ("Uruguay")         -> COUNTRY_NAMES in core/countries.py
+    a city ("Lisbon")                  -> catalogs/country-hints.json
+    a company's shorthand ("CHI")      -> that source's country_hints
+    a shared hint wrong for a company  -> that source's country_hints (overrides)
+    many "City, ST" locations          -> "state_codes": true on that source
     not a place ("Remote", "Anywhere") -> leave it; no single country fits
 """
 
@@ -75,7 +78,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: {path} isn't a saved jobs file ({e})", file=sys.stderr)
         return 1
 
-    finder = CountryFinder(getattr(source, "country_hints", {}))
+    finder = CountryFinder(
+        getattr(source, "country_hints", {}),
+        state_codes=getattr(source, "state_codes", False),
+    )
     missing = missing_locations(jobs, finder)
     total = len({location for job in jobs for location in job.get("locations") or []})
 

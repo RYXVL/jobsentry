@@ -10,15 +10,22 @@ Greenhouse publishes every hosted board as a public, read-only JSON API
 Companies aren't written as Python: each is an entry in
 catalogs/greenhouse-sources.json, and loaders/greenhouse_loader.py builds a
 subclass of GreenhouseSource for it with these class attributes set:
-name, company, homepage, board_token, api_base, board_base, country_hints.
+name, company, homepage, board_tokens, api_base, board_base, country_hints,
+state_codes.
 
-A refresh is one request. How Greenhouse's fields map onto Job:
+A company can have several boards (e.g. one per region). A refresh fetches
+each board once and merges them; Greenhouse job IDs are unique across all
+boards, so a job listed on two boards is kept once. Each job records its
+board in Job.extra["board_token"], so details are fetched from the right one.
+
+How Greenhouse's fields map onto Job:
 
     title, absolute_url                   -> title, url
     first_published, updated_at           -> posted_at, updated_at
     departments[].name                    -> teams
     location.name (free text)             -> locations, split on • ; |
-    country names in the locations        -> countries (plus country_hints)
+    country names in the locations        -> countries (plus country_hints,
+                                             and "City, ST" if state_codes)
     "Remote" / "Hybrid" in the locations  -> work_modes (only when stated)
     metadata "Employment Type" (if set)   -> employment_type
 
@@ -55,13 +62,14 @@ _HYBRID = re.compile(r"\bhybrid\b", re.IGNORECASE)
 EMPLOYMENT_TYPE_FIELDS = frozenset({"employment type", "employment_type", "job type", "time type"})
 
 class GreenhouseSource(JobSource):
-    """Base for companies with a Greenhouse-hosted board. Subclasses are
+    """Base for companies with Greenhouse-hosted boards. Subclasses are
     built from the catalog; every attribute below is set by the loader."""
 
     strategy = "greenhouse"
 
-    #: The board's token: the <token> in <board_base>/<token>.
-    board_token: ClassVar[str]
+    #: The company's board tokens: each is the <token> in <board_base>/<token>.
+    #: Usually one; several for companies with a board per region.
+    board_tokens: ClassVar[tuple[str, ...]]
     #: Greenhouse API root, e.g. https://boards-api.greenhouse.io/v1/boards
     api_base: ClassVar[str]
     #: Public board site root, e.g. https://boards.greenhouse.io
@@ -69,36 +77,37 @@ class GreenhouseSource(JobSource):
     #: Extra location text to count as a country, for places listed without
     #: one, e.g. {"San Francisco": "US", "Toronto": "CA"}. Whole words, any case.
     country_hints: ClassVar[dict[str, str]] = {}
+    #: Read "City, ST" as a US state or Canadian province when nothing else
+    #: matched. Only for boards that write North American locations this way.
+    state_codes: ClassVar[bool] = False
 
     # URLs -------------------------------------------------------------------
 
-    def jobs_api_url(self) -> str:
-        return f"{self.api_base}/{self.board_token}/jobs"
+    def jobs_api_url(self, board_token: str) -> str:
+        return f"{self.api_base}/{board_token}/jobs"
 
-    def job_api_url(self, job_id: str) -> str:
-        return f"{self.api_base}/{self.board_token}/jobs/{job_id}"
+    def job_api_url(self, board_token: str, job_id: str) -> str:
+        return f"{self.api_base}/{board_token}/jobs/{job_id}"
 
-    def job_page_url(self, job_id: str) -> str:
-        return f"{self.board_base}/{self.board_token}/jobs/{job_id}"
+    def job_page_url(self, board_token: str, job_id: str) -> str:
+        return f"{self.board_base}/{board_token}/jobs/{job_id}"
 
     # JobSource --------------------------------------------------------------
 
     def fetch_jobs(self) -> list[Job]:
-        """Every job on the board, in one request."""
-        url = self.jobs_api_url()
-        data = self._get_json(url, params={"content": "true"})
-        items = data.get("jobs") if isinstance(data, dict) else None
-        if not isinstance(items, list):
-            raise SourceError(f"Unexpected Greenhouse response at {url}: no 'jobs' list")
-        finder = CountryFinder(self.country_hints)
-        return [
-            self._to_job(item, finder)
-            for item in items
-            if isinstance(item, dict) and "id" in item
-        ]
+        """Every job on every board, one request per board."""
+        finder = CountryFinder(self.country_hints, state_codes=self.state_codes)
+        jobs: dict[str, Job] = {}
+        for board_token in self.board_tokens:
+            for item in self._board_items(board_token):
+                job = self._to_job(item, board_token, finder)
+                jobs.setdefault(job.id, job)  # listed on two boards: keep the first
+        return list(jobs.values())
 
     def fetch_job_details(self, job: Job) -> JobDetails:
-        url = self.job_api_url(job.id)
+        # Jobs saved before boards were recorded fall back to the first board.
+        board_token = job.extra.get("board_token") or self.board_tokens[0]
+        url = self.job_api_url(board_token, job.id)
         item = self._get_json(url)
         if not isinstance(item, dict) or "id" not in item:
             raise SourceError(f"Unexpected Greenhouse response at {url}: no job")
@@ -114,6 +123,15 @@ class GreenhouseSource(JobSource):
 
     # Helpers ----------------------------------------------------------------
 
+    def _board_items(self, board_token: str) -> list[dict[str, Any]]:
+        """Every job entry on one board, as Greenhouse returns it."""
+        url = self.jobs_api_url(board_token)
+        data = self._get_json(url, params={"content": "true"})
+        items = data.get("jobs") if isinstance(data, dict) else None
+        if not isinstance(items, list):
+            raise SourceError(f"Unexpected Greenhouse response at {url}: no 'jobs' list")
+        return [item for item in items if isinstance(item, dict) and "id" in item]
+
     def _get_json(self, url: str, **kwargs: Any) -> Any:
         """GET JSON, turning an unreadable body into SourceError."""
         try:
@@ -121,7 +139,7 @@ class GreenhouseSource(JobSource):
         except ValueError as e:  # body wasn't valid JSON
             raise SourceError(f"{url} did not return valid JSON: {e}") from e
 
-    def _to_job(self, item: dict[str, Any], finder: CountryFinder) -> Job:
+    def _to_job(self, item: dict[str, Any], board_token: str, finder: CountryFinder) -> Job:
         """Convert one board entry to a Job."""
         job_id = str(item["id"])
         location_text = str((item.get("location") or {}).get("name") or "").strip()
@@ -141,7 +159,7 @@ class GreenhouseSource(JobSource):
             source=self.name,
             id=job_id,
             title=str(item.get("title") or "").strip(),
-            url=item.get("absolute_url") or self.job_page_url(job_id),
+            url=item.get("absolute_url") or self.job_page_url(board_token, job_id),
             company=self.company,
             teams=[
                 str(d["name"]).strip()
@@ -155,6 +173,7 @@ class GreenhouseSource(JobSource):
             employment_type=_metadata_value(item, EMPLOYMENT_TYPE_FIELDS),
             posted_at=item.get("first_published"),
             updated_at=item.get("updated_at"),
+            extra={"board_token": board_token},
         )
 
 def _metadata_value(item: dict[str, Any], names: frozenset[str]) -> str | None:

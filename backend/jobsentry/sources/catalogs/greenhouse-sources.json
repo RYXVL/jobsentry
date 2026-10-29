@@ -96,6 +96,56 @@
       "company": "Robinhood",
       "board_token": "robinhood",
       "homepage": "https://www.robinhood.com/careers"
+    },
+    {
+      "name": "airtable",
+      "company": "Airtable",
+      "board_token": "airtable",
+      "homepage": "https://www.airtable.com/careers"
+    },
+    {
+      "name": "datadog",
+      "company": "Datadog",
+      "board_token": "datadog",
+      "homepage": "https://www.datadog.com/careers"
+    },
+    {
+      "name": "doordash",
+      "company": "DoorDash",
+      "board_token": ["doordashcanada", "doordashindia", "doordashinternational", "doordashmexico", "doordashusa"],
+      "homepage": "https://www.doordash.com/careers",
+      "country_hints": {
+        "Dublin, CA": "US",
+        "London, ON": "CA"
+      },
+      "state_codes": true
+    },
+    {
+      "name": "dropbox",
+      "company": "Dropbox",
+      "board_token": "dropbox",
+      "homepage": "https://www.dropbox.jobs"
+    },
+    {
+      "name": "duolingo",
+      "company": "Duolingo",
+      "board_token": "duolingo",
+      "homepage": "https://www.duolingo.com/careers",
+      "state_codes": true
+    },
+    {
+      "name": "okta",
+      "company": "Okta",
+      "board_token": "okta",
+      "homepage": "https://www.okta.com/careers",
+      "country_hints": { "Georgia": "US" }
+    },
+    {
+      "name": "reddit",
+      "company": "Reddit",
+      "board_token": "reddit",
+      "homepage": "https://redditinc.com/careers",
+      "state_codes": true
     }
   ]
 }
