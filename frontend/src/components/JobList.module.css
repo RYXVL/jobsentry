@@ -42,17 +42,24 @@
   outline-offset: 3px;
 }
 
-/* Company (when shown), title, location and mode stacked on separate lines. */
+/* Company chip (when shown), title, location and mode on separate lines. */
 .summary {
   display: grid;
 }
 
-/* The company above the title, in lists that mix several companies. */
+/* A pill above the title: round logo badge, then the company name. Sized
+   to its content (justify-self) rather than stretching across the card. */
 .company {
-  margin-bottom: var(--space-1);
-  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-self: start;
+  margin-bottom: var(--space-2);
+  padding: 0.2rem 0.75rem 0.2rem 0.2rem;
   font-size: var(--text-sm);
-  letter-spacing: 0.02em;
+  background: var(--glass-card-hover);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
 }
 
 .title {

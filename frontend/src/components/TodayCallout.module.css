@@ -1,0 +1,46 @@
+/*
+ * Styled like the buttons rather than the glass cards around it (a solid
+ * ink border and an offset shadow), so it reads as the place to start.
+ */
+.callout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  background: var(--glass-card-hover);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--press) var(--press) 0 var(--ink);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+
+/* Browsers without backdrop blur get a more solid fill so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .callout {
+    background: var(--glass-fallback);
+  }
+}
+
+.text {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.heading {
+  font-size: var(--text-xl);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.count {
+  font-size: var(--text-lg);
+}
+
+.hint {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}

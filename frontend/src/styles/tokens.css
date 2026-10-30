@@ -13,7 +13,7 @@
 
   /* Glass: translucent cards that blur the gradient behind them */
   --glass-card: rgba(255, 250, 246, 0.4);         /* card */
-  --glass-card-hover: rgba(255, 250, 246, 0.65);  /* hovered card, initials badge */
+  --glass-card-hover: rgba(255, 250, 246, 0.65);  /* hovered card, initials badge, chips */
   --glass-fallback: rgba(255, 250, 246, 0.85);    /* card, where blur is unsupported */
   --glass-border: rgba(255, 255, 255, 0.6);
   --glass-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
@@ -40,12 +40,14 @@
   /* Shape */
   --radius-sm: 0.625rem; /* logo badge */
   --radius-md: 1rem;     /* card */
+  --radius-pill: 999px;  /* fully rounded ends, e.g. company chips */
 
   /* Layout */
   --measure: 46rem;      /* page column width, about 70 characters */
   --press: 4px;          /* depth of the button's shadow */
   --card-min: 12rem;     /* narrowest a source card gets before the grid drops a column */
-  --logo-size: 3rem;
+  --logo-size: 3rem;     /* logo on source cards */
+  --logo-size-sm: 1.5rem; /* logo in company chips on job cards */
 
   color-scheme: light;
 }

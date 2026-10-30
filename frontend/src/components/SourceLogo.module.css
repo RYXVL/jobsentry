@@ -18,3 +18,15 @@
   letter-spacing: 0.04em;
   user-select: none;
 }
+
+/* A small round badge, e.g. in the company chip on job cards. */
+.small {
+  width: var(--logo-size-sm);
+  height: var(--logo-size-sm);
+  border-radius: 50%;
+}
+
+.small.initials {
+  font-size: calc(var(--logo-size-sm) * 0.42);
+  letter-spacing: 0;
+}

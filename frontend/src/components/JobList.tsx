@@ -1,10 +1,12 @@
 import type { Job } from "../api/types";
 import { formatDate, formatList, formatWorkModes } from "../utils/format";
 import styles from "./JobList.module.css";
+import { SourceLogo } from "./SourceLogo";
 
 interface JobListProps {
   jobs: Job[];
-  /** Show the company above each title, for lists mixing several companies. */
+  /** Show a company chip (logo and name) above each title, for lists mixing
+   *  several companies. */
   showCompany?: boolean;
 }
 
@@ -21,7 +23,12 @@ export function JobList({ jobs, showCompany = false }: JobListProps) {
         <li key={`${job.source}:${job.id}`}>
           <a href={job.url} target="_blank" rel="noreferrer" className={styles.card}>
             <span className={styles.summary}>
-              {showCompany && <span className={styles.company}>{job.company}</span>}
+              {showCompany && (
+                <span className={styles.company}>
+                  <SourceLogo name={job.source} company={job.company} size="small" />
+                  <span>{job.company}</span>
+                </span>
+              )}
               <span className={styles.title}>{job.title}</span>
               {job.locations.length > 0 && (
                 <span className={styles.meta}>{formatList(job.locations)}</span>

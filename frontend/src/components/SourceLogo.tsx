@@ -7,13 +7,16 @@ import styles from "./SourceLogo.module.css";
  * named after the source's `name` (not its company name), e.g. stripe.png.
  * To support another format, add its extension here.
  */
-const LOGO_EXTENSIONS = ["png", "jpg", "jpeg"] as const;
+const LOGO_EXTENSIONS = ["png", "jpg"] as const;
 
 interface SourceLogoProps {
   /** The source's registry name; used for the file name. */
   name: string;
   /** The company's display name; used for the initials fallback. */
   company: string;
+  /** "regular": a rounded square, as on source cards. "small": a round
+   *  badge, e.g. inside the company chip on job cards. */
+  size?: "regular" | "small";
 }
 
 /**
@@ -24,13 +27,14 @@ interface SourceLogoProps {
  * Decorative only: the company name is always shown next to it, so the
  * image has empty alt text and the initials are hidden from screen readers.
  */
-export function SourceLogo({ name, company }: SourceLogoProps) {
+export function SourceLogo({ name, company, size = "regular" }: SourceLogoProps) {
   const [attempt, setAttempt] = useState(0);
   const extension = LOGO_EXTENSIONS[attempt];
+  const sizeClass = size === "small" ? styles.small : "";
 
   if (extension === undefined) {
     return (
-      <span className={`${styles.logo} ${styles.initials}`} aria-hidden="true">
+      <span className={`${styles.logo} ${styles.initials} ${sizeClass}`} aria-hidden="true">
         {initials(company)}
       </span>
     );
@@ -39,7 +43,7 @@ export function SourceLogo({ name, company }: SourceLogoProps) {
   return (
     <img
       key={extension}
-      className={styles.logo}
+      className={`${styles.logo} ${sizeClass}`}
       src={`${import.meta.env.BASE_URL}logos/${encodeURIComponent(name)}.${extension}`}
       alt=""
       decoding="async"

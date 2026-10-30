@@ -1,15 +1,16 @@
 import { useClearAll, useRefreshAll, useSources } from "../api/queries";
-import { Button, ButtonLink } from "../components/Button";
+import { Button } from "../components/Button";
 import { PageHeader } from "../components/PageHeader";
 import { SourceList } from "../components/SourceList";
 import { ErrorNotice, StatusMessage } from "../components/StatusMessage";
+import { TodayCallout } from "../components/TodayCallout";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { formatJobCount } from "../utils/format";
 import styles from "./SourcesPage.module.css";
 
 const CONFIRM_CLEAR = "Delete all saved jobs for every company? This can't be undone.";
 
-/** /sources: every company Job Sentry can read. */
+/** /sources: every company Job Sentry can read, with today's jobs on top. */
 export function SourcesPage() {
   useDocumentTitle("Sources");
   const sources = useSources();
@@ -30,7 +31,6 @@ export function SourcesPage() {
 
   const actions = (
     <div className={styles.actions}>
-      <ButtonLink to="/today">Today's jobs</ButtonLink>
       <Button busy={refreshAll.isPending} disabled={busy} onClick={fetchAll}>
         {refreshAll.isPending ? "Fetching…" : "Fetch all jobs"}
       </Button>
@@ -85,7 +85,10 @@ export function SourcesPage() {
           <code>backend/jobsentry/sources/catalogs/greenhouse-sources.json</code>.
         </StatusMessage>
       ) : (
-        <SourceList sources={sources.data} />
+        <>
+          <TodayCallout />
+          <SourceList sources={sources.data} />
+        </>
       )}
     </>
   );
