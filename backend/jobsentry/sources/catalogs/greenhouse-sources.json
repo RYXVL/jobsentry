@@ -146,6 +146,31 @@
       "board_token": "reddit",
       "homepage": "https://redditinc.com/careers",
       "state_codes": true
+    },
+    {
+      "name": "abnormal-ai",
+      "company": "Abnormal AI",
+      "board_token": "abnormalsecurity",
+      "homepage": "https://abnormal.ai/careers"
+    },
+    {
+      "name": "mongodb",
+      "company": "MongoDB",
+      "board_token": "mongodb",
+      "homepage": "https://www.mongodb.com/company/careers"
+    },
+    {
+      "name": "spacex",
+      "company": "SpaceX",
+      "board_token": "spacex",
+      "homepage": "https://www.spacex.com/careers",
+      "state_codes": true
+    },
+    {
+      "name": "vercel",
+      "company": "Vercel",
+      "board_token": "vercel",
+      "homepage": "https://vercel.com/careers"
     }
   ]
 }

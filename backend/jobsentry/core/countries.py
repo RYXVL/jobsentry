@@ -5,16 +5,17 @@ no country codes (Greenhouse, Lever, Ashby, ...).
     finder.find(["London, United Kingdom", "Remote - Canada", "Toronto"])
     -> ["CA", "GB"]
 
-Country names and US state names match whole words in any case. A few
-abbreviations (US, U.S., USA, UK, U.K., UAE) match only in capitals, so
-ordinary words like "us" never count. A city on its own gives nothing
-unless a hint names it.
+Country names, US state names and Canadian province names match whole
+words in any case. A few abbreviations (US, U.S., USA, UK, U.K., UAE) match
+only in capitals, so ordinary words like "us" never count. A city on its
+own gives nothing unless a hint names it.
 
-With state_codes=True, a location ending in ", ST" that matched nothing
-else is read as a US state or Canadian province ("Tempe, AZ" -> US,
-"Vancouver, BC" -> CA). It's off by default because many of those codes are
-also country codes (CA is California or Canada, IN is Indiana or India), so
-only turn it on for boards that write North American locations this way.
+With state_codes=True, a location ending in ", ST" or " - ST" that matched
+nothing else is read as a US state or Canadian province ("Tempe, AZ" -> US,
+"Remote - TX" -> US, "Vancouver, BC" -> CA). It's off by default because
+many of those codes are also country codes (CA is California or Canada, IN
+is Indiana or India), so only turn it on for boards that write North
+American locations this way.
 """
 
 from __future__ import annotations
@@ -58,6 +59,14 @@ US_STATE_NAMES: tuple[str, ...] = (
     "Washington", "West Virginia", "Wisconsin", "Wyoming",
 )
 
+#: Canadian province and territory names, all meaning Canada.
+CANADIAN_PROVINCE_NAMES: tuple[str, ...] = (
+    "Alberta", "British Columbia", "Manitoba", "New Brunswick",
+    "Newfoundland and Labrador", "Northwest Territories", "Nova Scotia",
+    "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Québec",
+    "Saskatchewan", "Yukon",
+)
+
 #: Postal codes for US states (plus DC), used only with state_codes=True.
 US_STATE_CODES: frozenset[str] = frozenset(
     "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS "
@@ -76,11 +85,16 @@ COUNTRY_ABBREVIATIONS: dict[str, str] = {
     "UAE": "AE",
 }
 
-#: Every name matched in any case: countries plus US states.
-_ALL_NAMES: dict[str, str] = {**COUNTRY_NAMES, **{state: "US" for state in US_STATE_NAMES}}
+#: Every name matched in any case: countries, US states and Canadian provinces.
+_ALL_NAMES: dict[str, str] = {
+    **COUNTRY_NAMES,
+    **{state: "US" for state in US_STATE_NAMES},
+    **{province: "CA" for province in CANADIAN_PROVINCE_NAMES},
+}
 
-#: ", ST" at the very end of a location, capitals only, dots allowed ("B.C.").
-_STATE_CODE_RE = re.compile(r",\s*((?:[A-Z]\.?){2})\s*$")
+#: A two-letter code at the very end of a location, after a comma ("Tempe, AZ")
+#: or a spaced dash ("Remote - TX"). Capitals only; dots allowed ("B.C.").
+_STATE_CODE_RE = re.compile(r"(?:,|\s-)\s*((?:[A-Z]\.?){2})\s*$")
 
 def _whole_words(words: Iterable[str], flags: int = 0) -> re.Pattern[str] | None:
     """One regex matching any of `words` as whole words, longest first so
@@ -101,7 +115,7 @@ _ABBREVIATIONS_RE = _whole_words(COUNTRY_ABBREVIATIONS)
 
 def _state_code_country(text: str) -> list[str]:
     """["US"] or ["CA"] if `text` ends in a US state or Canadian province
-    code ("Tempe, AZ", "Vancouver, B.C."); otherwise []."""
+    code ("Tempe, AZ", "Remote - TX", "Vancouver, B.C."); otherwise []."""
     match = _STATE_CODE_RE.search(text)
     if not match:
         return []
