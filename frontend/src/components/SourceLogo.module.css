@@ -1,32 +1,37 @@
-/* A square badge: the company's logo, or its initials when there is none. */
+/*
+ * A company's logo, or its initials when there's no logo file.
+ *
+ * .logo only sets the size, so a logo image shows exactly as the file is:
+ * no fill, border or rounded corners added. The initials fallback gets a
+ * badge look (fill, border, rounded corners) so it still reads as a logo.
+ */
 .logo {
   flex: none;
   width: var(--logo-size);
   height: var(--logo-size);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  background: var(--paper);
   object-fit: contain;
 }
 
 .initials {
   display: grid;
   place-items: center;
-  background: var(--glass-card-hover);
   color: var(--ink);
   font-size: var(--text-md);
   letter-spacing: 0.04em;
+  background: var(--glass-card-hover);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
   user-select: none;
 }
 
-/* A small round badge, e.g. in the company chip on job cards. */
+/* The small size, e.g. in the company chip on job cards. */
 .small {
   width: var(--logo-size-sm);
   height: var(--logo-size-sm);
-  border-radius: 50%;
 }
 
 .small.initials {
+  border-radius: 50%;
   font-size: calc(var(--logo-size-sm) * 0.42);
   letter-spacing: 0;
 }
