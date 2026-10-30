@@ -11,6 +11,36 @@
         "Remote, AMER": "US"
       },
       "state_codes": true
+    },
+    {
+      "name": "wispr-flow",
+      "company": "Wispr Flow",
+      "board_name": "wispr-flow",
+      "homepage": "https://wisprflow.ai/careers"
+    },
+    {
+      "name": "solveai",
+      "company": "SolveAI",
+      "board_name": "solve.ai",
+      "homepage": "https://solve.ai/careers"
+    },
+    {
+      "name": "wayve",
+      "company": "Wayve",
+      "board_name": "wayve",
+      "homepage": "https://wayve.ai/careers/"
+    },
+    {
+      "name": "notion",
+      "company": "Notion",
+      "board_name": "notion",
+      "homepage": "https://www.notion.com/careers"
+    },
+    {
+      "name": "openai",
+      "company": "OpenAI",
+      "board_name": "openai",
+      "homepage": "https://openai.com/careers/"
     }
   ]
 }
