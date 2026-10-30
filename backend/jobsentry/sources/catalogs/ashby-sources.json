@@ -1,0 +1,16 @@
+{
+  "api_base": "https://api.ashbyhq.com/posting-api/job-board",
+  "board_base": "https://jobs.ashbyhq.com",
+  "sources": [
+    {
+      "name": "supabase",
+      "company": "Supabase",
+      "board_name": "supabase",
+      "homepage": "https://supabase.com/careers",
+      "country_hints": {
+        "Remote, AMER": "US"
+      },
+      "state_codes": true
+    }
+  ]
+}

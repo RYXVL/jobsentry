@@ -2,10 +2,12 @@
 sources/loaders/ build a subclass of one of these for every catalog entry.
 
     greenhouse.py   Greenhouse's public board API
+    ashby.py        Ashby's public job posting API
 
-Planned: ashby.py (Ashby's public job board API), lever.py (Lever's postings API).
+Planned: lever.py (Lever's public postings API).
 """
 
+from .ashby import AshbySource
 from .greenhouse import GreenhouseSource
 
-__all__ = ["GreenhouseSource"]
+__all__ = ["AshbySource", "GreenhouseSource"]

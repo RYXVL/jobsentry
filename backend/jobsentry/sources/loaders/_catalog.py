@@ -1,8 +1,8 @@
-"""Shared helpers for reading and validating catalog files.
+"""Shared helpers for reading and validating catalog files, used by every
+platform loader (greenhouse_loader.py, ashby_loader.py, ...).
 
 Every problem raises ConfigError naming the file and the entry, so a typo
 in a catalog fails loudly at startup instead of silently dropping a source.
-Platform loaders (greenhouse_loader.py, later ashby_loader.py) use these.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import json
 import re
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 from ...core.exceptions import ConfigError
 
@@ -25,6 +25,8 @@ COUNTRY_HINTS_FILE = "country-hints.json"
 _SLUG = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 _COUNTRY_CODE = re.compile(r"^[A-Z]{2}$")
 _URL = re.compile(r"^https?://[^\s/]+(/\S*)?$")
+
+SourceT = TypeVar("SourceT", bound=type)
 
 def read_catalog(filename: str) -> tuple[str, dict[str, Any]]:
     """Read catalogs/<filename>. Returns (file name for messages, parsed object)."""
@@ -84,6 +86,32 @@ def get_url(obj: dict[str, Any], key: str, where: str) -> str:
     """An http(s) URL, without a trailing slash."""
     return get_str(obj, key, where, _URL, "an http(s) URL").rstrip("/")
 
+def get_bool(obj: dict[str, Any], key: str, where: str, default: bool = False) -> bool:
+    """A true/false value, or `default` when the key is absent."""
+    value = obj.get(key, default)
+    if not isinstance(value, bool):
+        raise ConfigError(f"{where}: '{key}' must be true or false, got {value!r}")
+    return value
+
+def get_token_list(
+    obj: dict[str, Any], key: str, where: str, pattern: re.Pattern[str], expected: str
+) -> tuple[str, ...]:
+    """One token as a string, or several as a non-empty list (e.g. a company
+    with a board per region). Each must match `pattern`; no duplicates."""
+    value = obj[key]
+    tokens = [value] if isinstance(value, str) else value
+    if not isinstance(tokens, list) or not tokens:
+        raise ConfigError(f"{where}: '{key}' must be a value or a non-empty list of values")
+    result: list[str] = []
+    for token in tokens:
+        if not isinstance(token, str) or not pattern.match(token.strip()):
+            raise ConfigError(f"{where}: '{key}' must be {expected}, got {token!r}")
+        token = token.strip()
+        if token in result:
+            raise ConfigError(f"{where}: '{key}' lists '{token}' twice")
+        result.append(token)
+    return tuple(result)
+
 def get_country_hints(obj: dict[str, Any], key: str, where: str) -> dict[str, str]:
     """A catalog entry's own {"location text": "ISO country code"}."""
     return parse_country_hints(obj[key], f"{where}: '{key}'")
@@ -100,3 +128,9 @@ def parse_country_hints(hints: Any, where: str) -> dict[str, str]:
             )
         result[text.strip()] = code.upper()
     return result
+
+def make_source_class(base: SourceT, doc: str, **settings: Any) -> SourceT:
+    """Create a subclass of `base` named after settings["name"] (e.g.
+    "door-dash" -> DoorDashSource), with `settings` as class attributes."""
+    class_name = "".join(part.capitalize() for part in re.split(r"[-_]", settings["name"])) + "Source"
+    return type(class_name, (base,), {"__module__": base.__module__, "__doc__": doc, **settings})
