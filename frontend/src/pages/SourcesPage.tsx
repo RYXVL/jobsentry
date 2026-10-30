@@ -1,5 +1,5 @@
 import { useClearAll, useRefreshAll, useSources } from "../api/queries";
-import { Button } from "../components/Button";
+import { Button, ButtonLink } from "../components/Button";
 import { PageHeader } from "../components/PageHeader";
 import { SourceList } from "../components/SourceList";
 import { ErrorNotice, StatusMessage } from "../components/StatusMessage";
@@ -30,6 +30,7 @@ export function SourcesPage() {
 
   const actions = (
     <div className={styles.actions}>
+      <ButtonLink to="/today">Today's jobs</ButtonLink>
       <Button busy={refreshAll.isPending} disabled={busy} onClick={fetchAll}>
         {refreshAll.isPending ? "Fetching…" : "Fetch all jobs"}
       </Button>
@@ -80,7 +81,8 @@ export function SourcesPage() {
         <ErrorNotice error={sources.error} onRetry={() => sources.refetch()} />
       ) : sources.data.length === 0 ? (
         <StatusMessage>
-          No sources yet. Add one in <code>backend/jobsentry/sources/companies/</code>.
+          No sources yet. Add one to{" "}
+          <code>backend/jobsentry/sources/catalogs/greenhouse-sources.json</code>.
         </StatusMessage>
       ) : (
         <SourceList sources={sources.data} />

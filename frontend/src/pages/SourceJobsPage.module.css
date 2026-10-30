@@ -8,20 +8,6 @@
   margin-bottom: var(--space-5);
 }
 
-/* Filters on the left, sort on the right; the sort drops below on narrow screens. */
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3) var(--space-5);
-  margin-bottom: var(--space-4);
-}
-
-.filters {
-  flex: 1 1 30rem;
-}
-
 /* Dim the list slightly while the next page loads. */
 .loading {
   opacity: 0.55;

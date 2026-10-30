@@ -59,6 +59,19 @@ class FacetValueOut(Schema):
     value: str
     count: int
 
+class AllJobsPageOut(Schema):
+    total: int = Field(description="All matching jobs across every source, not just this page")
+    limit: int
+    offset: int
+    fetched_at: str | None = Field(
+        description="Oldest last refresh among the sources included (ISO 8601); null if none"
+    )
+    unfetched: list[str] = Field(description="Companies never fetched, so not included")
+    countries: list[FacetValueOut] = Field(
+        description="Countries among jobs matching the date filter only, with counts"
+    )
+    jobs: list[JobOut]
+
 class JobFacetsOut(Schema):
     source: str
     teams: list[FacetValueOut]

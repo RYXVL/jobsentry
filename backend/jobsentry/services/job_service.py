@@ -2,8 +2,8 @@
 
 Interfaces never talk to sources or storage directly; they call this, so
 behaviour (caching, refreshing, filtering, saving) stays identical everywhere.
-The module-level functions at the end (refresh_all, clear_all) work across
-every source at once.
+The module-level functions at the end (refresh_all, clear_all, query_all)
+work across every source at once.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from ..core.http import HttpClient
 from ..core.models import Job, JobDetails, JobSnapshot
 from ..sources import JobSource, available_sources, create_source
 from ..storage import JobStore, JsonJobStore
-from .queries import FacetValue, JobFacets, JobPage, JobQuery, SourceStatus
+from .queries import AllJobsPage, FacetValue, JobFacets, JobPage, JobQuery, SourceStatus
 
 log = logging.getLogger(__name__)
 
@@ -191,3 +191,35 @@ def clear_all(settings: Settings | None = None) -> int:
         )
     settings = settings or Settings.from_env()
     return JsonJobStore(settings.data_dir).clear()
+
+
+def query_all(query: JobQuery, settings: Settings | None = None) -> AllJobsPage:
+    """Filter, sort and page saved jobs across every source at once.
+
+    Reads saved data only and never contacts a job board: a source that has
+    never been fetched is named in `unfetched` instead of being fetched."""
+    settings = settings or Settings.from_env()
+    store = JsonJobStore(settings.data_dir)
+    dated: list[Job] = []          # jobs matching the date filter only
+    fetched_times: list[str] = []
+    unfetched: list[str] = []
+    for info in available_sources():
+        snapshot = store.load_snapshot(info.name)
+        if snapshot is None:
+            unfetched.append(info.company)
+            continue
+        fetched_times.append(snapshot.fetched_at)
+        dated += [job for job in snapshot.jobs if query.matches_date(job)]
+
+    matches = query.sort_jobs([job for job in dated if query.matches(job)])
+    return AllJobsPage(
+        total=len(matches),
+        limit=query.limit,
+        offset=query.offset,
+        # All fetched_at values are UTC ISO strings in one format, so the
+        # smallest string is the oldest time.
+        fetched_at=min(fetched_times) if fetched_times else None,
+        unfetched=unfetched,
+        countries=_count(code for job in dated for code in job.countries),
+        jobs=matches[query.offset : query.offset + query.limit],
+    )

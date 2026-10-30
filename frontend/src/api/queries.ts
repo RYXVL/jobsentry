@@ -13,13 +13,16 @@ import {
 } from "@tanstack/react-query";
 
 import { api } from "./endpoints";
-import type { JobListParams } from "./types";
+import type { AllJobsParams, JobListParams } from "./types";
 
 export const queryKeys = {
   sources: ["sources"] as const,
   source: (source: string) => ["sources", source] as const,
   jobs: (source: string, params: JobListParams) => ["sources", source, "jobs", params] as const,
   facets: (source: string) => ["sources", source, "facets"] as const,
+  // Kept under "sources" so refreshing or clearing updates it too. "@" can't
+  // appear in a source name, so this never collides with one.
+  allJobs: (params: AllJobsParams) => ["sources", "@all", "jobs", params] as const,
 };
 
 export function useSources() {
@@ -35,6 +38,15 @@ export function useJobs(source: string, params: JobListParams) {
     queryKey: queryKeys.jobs(source, params),
     queryFn: () => api.listJobs(source, params),
     // Keep showing the current page while the next one loads.
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Jobs across every fetched source (saved data only, so always quick). */
+export function useAllJobs(params: AllJobsParams) {
+  return useQuery({
+    queryKey: queryKeys.allJobs(params),
+    queryFn: () => api.listAllJobs(params),
     placeholderData: keepPreviousData,
   });
 }

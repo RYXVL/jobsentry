@@ -2,18 +2,26 @@ import type { Job } from "../api/types";
 import { formatDate, formatList, formatWorkModes } from "../utils/format";
 import styles from "./JobList.module.css";
 
+interface JobListProps {
+  jobs: Job[];
+  /** Show the company above each title, for lists mixing several companies. */
+  showCompany?: boolean;
+}
+
 /**
  * One glass card per job: title, locations and work mode on the left, the
  * dates on the right. The whole card links to the company's own posting (in
  * a new tab) until there is a details page.
  */
-export function JobList({ jobs }: { jobs: Job[] }) {
+export function JobList({ jobs, showCompany = false }: JobListProps) {
   return (
     <ul className={styles.list}>
       {jobs.map((job) => (
-        <li key={job.id}>
+        // IDs are only unique within a source, so the key includes it.
+        <li key={`${job.source}:${job.id}`}>
           <a href={job.url} target="_blank" rel="noreferrer" className={styles.card}>
             <span className={styles.summary}>
+              {showCompany && <span className={styles.company}>{job.company}</span>}
               <span className={styles.title}>{job.title}</span>
               {job.locations.length > 0 && (
                 <span className={styles.meta}>{formatList(job.locations)}</span>

@@ -42,9 +42,17 @@
   outline-offset: 3px;
 }
 
-/* Title, location and mode stacked on separate lines. */
+/* Company (when shown), title, location and mode stacked on separate lines. */
 .summary {
   display: grid;
+}
+
+/* The company above the title, in lists that mix several companies. */
+.company {
+  margin-bottom: var(--space-1);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  letter-spacing: 0.02em;
 }
 
 .title {

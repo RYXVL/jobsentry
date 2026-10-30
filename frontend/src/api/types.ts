@@ -50,6 +50,21 @@ export interface JobPage {
   jobs: Job[];
 }
 
+/** GET /jobs: one page of jobs from every fetched source. */
+export interface AllJobsPage {
+  /** All matching jobs across every source, not just this page. */
+  total: number;
+  limit: number;
+  offset: number;
+  /** Oldest last refresh among the sources included; null if none fetched. */
+  fetched_at: string | null;
+  /** Companies never fetched, so not included. */
+  unfetched: string[];
+  /** Countries among jobs matching the date filter only, for the country picker. */
+  countries: FacetValue[];
+  jobs: Job[];
+}
+
 /** One value and how many saved jobs have it. */
 export interface FacetValue {
   value: string;
@@ -103,6 +118,14 @@ export interface JobListParams {
   sort?: JobSort;
   limit?: number;
   offset?: number;
+}
+
+/** GET /jobs takes the same options, plus a date filter. */
+export interface AllJobsParams extends JobListParams {
+  /** Only jobs first published on this date (YYYY-MM-DD), in `tz`. */
+  posted_on?: string;
+  /** IANA time zone for posted_on, e.g. "Asia/Kolkata". Defaults to UTC. */
+  tz?: string;
 }
 
 /** Every API error has this body (see backend/jobsentry/api/errors.py). */

@@ -1,0 +1,12 @@
+/* "Not included yet: ..." under the header. */
+.notice {
+  margin-bottom: var(--space-4);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+/* Dim the list slightly while the next page loads. */
+.loading {
+  opacity: 0.55;
+  transition: opacity 150ms;
+}

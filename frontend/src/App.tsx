@@ -13,6 +13,7 @@ import { HomePage } from "./pages/HomePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { SourceJobsPage } from "./pages/SourceJobsPage";
 import { SourcesPage } from "./pages/SourcesPage";
+import { TodayJobsPage } from "./pages/TodayJobsPage";
 import { WhyPage } from "./pages/WhyPage";
 
 // A fixed, full-window layer behind every page. Being fixed, it's out of
@@ -39,6 +40,7 @@ export function App() {
           <Route path="/why" element={<WhyPage />} />
           <Route path="/sources" element={<SourcesPage />} />
           <Route path="/sources/:source" element={<SourceJobsPage />} />
+          <Route path="/today" element={<TodayJobsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

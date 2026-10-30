@@ -7,8 +7,9 @@ the API layer converts them to Pydantic response models.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from ..core.models import Job, normalize_countries
 from ..sources import SourceInfo
@@ -22,15 +23,22 @@ JOB_SORTS: tuple[JobSort, ...] = ("newest", "oldest")
 
 @dataclass(frozen=True)
 class JobQuery:
-    """Filters, order and paging for listing saved jobs. Both filters are
-    optional and case-insensitive; a job must satisfy every filter that is
-    set. Jobs are sorted before paging, so every page follows one order."""
+    """Filters, order and paging for listing saved jobs. Every filter is
+    optional; a job must satisfy every filter that is set. Jobs are sorted
+    before paging, so every page follows one order.
+
+    posted_on keeps jobs first published on that calendar date in time zone
+    `tz`: only the date counts, not the time, so "today" means today where
+    the person is, not in UTC."""
 
     text: str | None = None             # keywords: every word must be in the title or a team
     countries: tuple[str, ...] = ()     # ISO codes; a job in ANY of them matches
+    posted_on: date | None = None       # only jobs first published on this date (in tz)
+    tz: str = "UTC"                     # IANA time zone for posted_on, e.g. "Asia/Kolkata"
     sort: JobSort = "newest"            # by date posted
     limit: int = 50
     offset: int = 0
+    _zone: ZoneInfo = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         if self.sort not in JOB_SORTS:
@@ -39,10 +47,27 @@ class JobQuery:
             raise ValueError(f"limit must be between 1 and {MAX_PAGE_SIZE}")
         if self.offset < 0:
             raise ValueError("offset must be 0 or more")
-        # Frozen, so normalise through object.__setattr__ ("ca" matches "CA").
+        try:
+            zone = ZoneInfo(self.tz)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValueError(
+                f"unknown time zone '{self.tz}' (use an IANA name like Asia/Kolkata)"
+            ) from None
+        # Frozen, so set derived values through object.__setattr__.
+        object.__setattr__(self, "_zone", zone)
         object.__setattr__(self, "countries", tuple(normalize_countries(self.countries)))
 
+    def matches_date(self, job: Job) -> bool:
+        """True if no date is set, or the job was first published on
+        posted_on in tz. A job without a readable posted_at never matches."""
+        if self.posted_on is None:
+            return True
+        posted = _parse_time(job.posted_at)
+        return posted is not None and posted.astimezone(self._zone).date() == self.posted_on
+
     def matches(self, job: Job) -> bool:
+        if not self.matches_date(job):
+            return False
         if self.text and not _has_keywords(job, self.text):
             return False
         if self.countries and not set(self.countries) & set(job.countries):
@@ -95,6 +120,23 @@ class JobPage:
 class FacetValue:
     value: str
     count: int
+
+@dataclass
+class AllJobsPage:
+    """One page of jobs from every fetched source. `total` counts all matches.
+
+    `countries` counts the jobs that match only the date filter, so a
+    country picker's options stay the same while keywords or countries are
+    applied. `fetched_at` is the oldest last refresh among the sources
+    included, i.e. how stale the data could be."""
+
+    total: int
+    limit: int
+    offset: int
+    fetched_at: str | None            # None when no source has been fetched
+    unfetched: list[str]              # company names never fetched, so not included
+    countries: list[FacetValue]
+    jobs: list[Job] = field(default_factory=list)
 
 @dataclass
 class JobFacets:
