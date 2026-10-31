@@ -41,6 +41,77 @@
       "company": "OpenAI",
       "board_name": "openai",
       "homepage": "https://openai.com/careers/"
+    },
+    {
+      "name": "cursor",
+      "company": "Cursor",
+      "board_name": "cursor",
+      "homepage": "https://cursor.com/careers"
+    },
+    {
+      "name": "perplexity",
+      "company": "Perplexity",
+      "board_name": "perplexity",
+      "homepage": "https://perplexity.com/careers"
+    },
+    {
+      "name": "ramp",
+      "company": "Ramp",
+      "board_name": "ramp",
+      "homepage": "https://ramp.com/careers"
+    },
+    {
+      "name": "plaid",
+      "company": "Plaid",
+      "board_name": "plaid",
+      "homepage": "https://plaid.com/careers",
+      "country_hints": {
+        "DC Office": "US",
+        "GBR - LON Metro": "GB"
+      }
+    },
+    {
+      "name": "snowflake",
+      "company": "Snowflake",
+      "board_name": "snowflake",
+      "homepage": "https://snowflake.com/careers"
+    },
+    {
+      "name": "harvey",
+      "company": "Harvey",
+      "board_name": "harvey",
+      "homepage": "https://www.harvey.ai/careers"
+    },
+    {
+      "name": "clickhouse",
+      "company": "ClickHouse",
+      "board_name": "clickhouse",
+      "homepage": "https://clickhouse.com/careers"
+    },
+    {
+      "name": "uipath",
+      "company": "UiPath",
+      "board_name": "uipath",
+      "homepage": "https://uipath.com/careers",
+      "country_hints": {
+        "Alba": "RO",
+        "Alexandria": "RO",
+        "Georgia": "GE",
+        "Gorj": "RO"
+      }
+    },
+    {
+      "name": "solace",
+      "company": "Solace",
+      "board_name": "solace",
+      "homepage": "https://www.solace.health/",
+      "state_codes": true
+    },
+    {
+      "name": "elevenlabs",
+      "company": "ElevenLabs",
+      "board_name": "elevenlabs",
+      "homepage": "https://elevenlabs.com/careers"
     }
   ]
 }
