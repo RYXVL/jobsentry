@@ -19,8 +19,8 @@ from pathlib import Path
 # ==============================
 
 NEW_SOURCES = {
-    "ashby": ["abc", "abc-def"],
-    "greenhouse": ["abc", "abc-def"]
+    "ashby": [],
+    "greenhouse": []
 }
 
 # ==============================
