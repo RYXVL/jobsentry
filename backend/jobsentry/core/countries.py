@@ -43,7 +43,8 @@ COUNTRY_NAMES: dict[str, str] = {
     "China": "CN", "Hong Kong": "HK", "Taiwan": "TW", "Australia": "AU",
     "New Zealand": "NZ", "Indonesia": "ID", "Philippines": "PH", "Thailand": "TH",
     "Vietnam": "VN", "Malaysia": "MY", "South Africa": "ZA", "Nigeria": "NG",
-    "Kenya": "KE", "Egypt": "EG", "Turkey": "TR",
+    "Kenya": "KE", "Egypt": "EG", "Turkey": "TR", "Kenya": "KE", "Egypt": "EG", 
+    "Turkey": "TR", "Pakistan": "PK", "American Samoa": "AS",
 }
 
 #: US state names, all meaning the US. Georgia is left out because it's

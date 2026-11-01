@@ -7,8 +7,84 @@
     {
       "name": "spotify",
       "company": "Spotify",
-      "site": "spotify",
+      "board_name": "spotify",
       "homepage": "https://www.lifeatspotify.com/jobs"
+    },
+    {
+      "name": "shield-ai",
+      "company": "Shield AI",
+      "board_name": "shieldai",
+      "homepage": "https://shield.ai/careers/"
+    },
+    {
+      "name": "palantir",
+      "company": "Palantir",
+      "board_name": "palantir",
+      "homepage": "https://palantir.com/careers",
+      "country_hints": {
+        "North America": "US"
+      },
+      "state_codes": true
+    },
+    {
+      "name": "zoox",
+      "company": "Zoox",
+      "board_name": "zoox",
+      "homepage": "https://zoox.com/careers",
+      "state_codes": true
+    },
+    {
+      "name": "binance",
+      "company": "Binance",
+      "board_name": "binance",
+      "homepage": "https://binance.com/careers"
+    },
+    {
+      "name": "gopuff",
+      "company": "Gopuff",
+      "board_name": "gopuff",
+      "homepage": "https://www.gopuff.com/go/careers",
+      "state_codes": true
+    },
+    {
+      "name": "lyra",
+      "company": "Lyra",
+      "board_name": "lyrahealth",
+      "homepage": "https://careers.lyrahealth.com/",
+      "country_hints": {
+        "Califonia": "US",
+        "Deleware": "US",
+        "Georgia": "US",
+        "Miho": "JP",
+        "Pennslyvania": "US",
+        "Virgin Islands": "VI"
+      },
+      "state_codes": true
+    },
+    {
+      "name": "veeva-systems",
+      "company": "Veeva Systems",
+      "board_name": "veeva",
+      "homepage": "https://careers.veeva.com/"
+    },
+    {
+      "name": "paytm",
+      "company": "Paytm",
+      "board_name": "paytm",
+      "homepage": "https://paytm.com/careers"
+    },
+    {
+      "name": "cesiumastro",
+      "company": "CesiumAstro",
+      "board_name": "CesiumAstro",
+      "homepage": "https://cesiumastro.com/careers",
+      "state_codes": true
+    },
+    {
+      "name": "toptal",
+      "company": "Toptal",
+      "board_name": "toptal",
+      "homepage": "https://toptal.com/careers"
     }
   ]
 }
