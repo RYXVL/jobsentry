@@ -112,6 +112,18 @@
       "company": "ElevenLabs",
       "board_name": "elevenlabs",
       "homepage": "https://elevenlabs.com/careers"
+    },
+    {
+      "name": "sarvam",
+      "company": "Sarvam",
+      "board_name": "sarvam",
+      "homepage": "https://www.sarvam.ai/careers"
+    },
+    {
+      "name": "mistral",
+      "company": "Mistral",
+      "board_name": "mistral.ai",
+      "homepage": "https://mistral.ai/careers/"
     }
   ]
 }
