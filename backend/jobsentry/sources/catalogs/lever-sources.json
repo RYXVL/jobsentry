@@ -1,0 +1,14 @@
+{
+  "api_base": "https://api.lever.co/v0/postings",
+  "board_base": "https://jobs.lever.co",
+  "eu_api_base": "https://api.eu.lever.co/v0/postings",
+  "eu_board_base": "https://jobs.eu.lever.co",
+  "sources": [
+    {
+      "name": "spotify",
+      "company": "Spotify",
+      "site": "spotify",
+      "homepage": "https://www.lifeatspotify.com/jobs"
+    }
+  ]
+}
