@@ -11,11 +11,11 @@ File format:
         {
           "name": "spotify",           required. Lowercase; used in URLs and data/<name>/
           "company": "Spotify",        required. Display name
-          "site": "spotify",           required. The <site> in <board_base>/<site>, or
-                                       a list of sites merged into one source
+          "board_name": "spotify",     required. The <name> in <board_base>/<name>, or
+                                       a list of names merged into one source
           "region": "global",          optional. "global" (default) or "eu" for
                                        companies on Lever's EU instance
-          "homepage": "https://...",   optional. Defaults to the first site's page
+          "homepage": "https://...",   optional. Defaults to the first board's page
           "country_hints": {           optional. Hints for this company only; added to
             "SF": "US"                 (and overriding) catalogs/country-hints.json
           },
@@ -26,7 +26,7 @@ File format:
       ]
     }
 
-To add a company: check that <api_base>/<site>?mode=json returns postings
+To add a company: check that <api_base>/<name>?mode=json returns postings
 in a browser (try the EU base if the global one gives 404), add an entry,
 restart the API, then refresh it.
 """
@@ -57,11 +57,11 @@ CATALOG_FILE = "lever-sources.json"
 
 _TOP_REQUIRED = ("api_base", "board_base", "sources")
 _TOP_OPTIONAL = ("eu_api_base", "eu_board_base")
-_SOURCE_REQUIRED = ("name", "company", "site")
+_SOURCE_REQUIRED = ("name", "company", "board_name")
 _SOURCE_OPTIONAL = ("region", "homepage", "country_hints", "state_codes")
 _REGIONS = ("global", "eu")
-#: Lever site names are the last part of the board URL, e.g. "spotify".
-_SITE = re.compile(r"^[A-Za-z0-9_.-]+$")
+#: Lever board names are the last part of the board URL, e.g. "spotify".
+_BOARD_NAME = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 def load() -> list[type[LeverSource]]:
     """Read the catalog and register one source per entry. Both the catalog
@@ -108,19 +108,21 @@ def build_sources(
             raise ConfigError(f"{where} is on the EU region, but {filename} has no EU URLs")
         api_base, board_base = bases[region]
 
-        sites = get_token_list(entry, "site", where, _SITE, "letters, digits, ., - or _")
+        board_names = get_token_list(
+            entry, "board_name", where, _BOARD_NAME, "letters, digits, ., - or _"
+        )
         own_hints = get_country_hints(entry, "country_hints", where) if "country_hints" in entry else {}
         company = get_str(entry, "company", where)
         classes.append(make_source_class(
             LeverSource,
-            f"{company} jobs from Lever site(s): {', '.join(sites)} ({region}).",
+            f"{company} jobs from Lever board(s): {', '.join(board_names)} ({region}).",
             name=name,
             company=company,
-            sites=sites,
+            board_names=board_names,
             homepage=(
                 get_url(entry, "homepage", where)
                 if "homepage" in entry
-                else f"{board_base}/{quote(sites[0])}"
+                else f"{board_base}/{quote(board_names[0])}"
             ),
             country_hints={**(shared_hints or {}), **own_hints},
             state_codes=get_bool(entry, "state_codes", where),
@@ -128,4 +130,3 @@ def build_sources(
             board_base=board_base,
         ))
     return classes
-

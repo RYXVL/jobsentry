@@ -3,16 +3,16 @@
 Lever publishes every hosted board as a public, read-only JSON API
 (https://github.com/lever/postings-api), on a global and an EU instance:
 
-    GET <api_base>/<site>?mode=json          every published posting
-    GET <api_base>/<site>/<id>?mode=json     one posting
+    GET <api_base>/<board name>?mode=json          every published posting
+    GET <api_base>/<board name>/<id>?mode=json     one posting
 
 Companies aren't written as Python: each is an entry in
 catalogs/lever-sources.json, and loaders/lever_loader.py builds a subclass
 of LeverSource for it with these class attributes set: name, company,
-homepage, sites, api_base, board_base, country_hints, state_codes.
+homepage, board_names, api_base, board_base, country_hints, state_codes.
 
-A company can have several sites; they're fetched one request each and
-merged, and each job records its site in Job.extra["site"].
+A company can have several boards; they're fetched one request each and
+merged, and each job records its board in Job.extra["board_name"].
 
 How Lever's fields map onto Job:
 
@@ -59,8 +59,8 @@ class LeverSource(JobSource):
 
     strategy = "lever"
 
-    #: The company's sites: each is the <site> in <board_base>/<site>.
-    sites: ClassVar[tuple[str, ...]]
+    #: The company's boards: each is the <name> in <board_base>/<name>.
+    board_names: ClassVar[tuple[str, ...]]
     #: Lever API root for the company's region, e.g. https://api.lever.co/v0/postings
     api_base: ClassVar[str]
     #: Public board site root for the company's region, e.g. https://jobs.lever.co
@@ -72,31 +72,31 @@ class LeverSource(JobSource):
 
     # URLs -------------------------------------------------------------------
 
-    def site_api_url(self, site: str) -> str:
-        return f"{self.api_base}/{quote(site)}"
+    def board_api_url(self, board_name: str) -> str:
+        return f"{self.api_base}/{quote(board_name)}"
 
-    def posting_api_url(self, site: str, posting_id: str) -> str:
-        return f"{self.api_base}/{quote(site)}/{quote(posting_id)}"
+    def posting_api_url(self, board_name: str, posting_id: str) -> str:
+        return f"{self.api_base}/{quote(board_name)}/{quote(posting_id)}"
 
-    def posting_page_url(self, site: str, posting_id: str) -> str:
-        return f"{self.board_base}/{quote(site)}/{quote(posting_id)}"
+    def posting_page_url(self, board_name: str, posting_id: str) -> str:
+        return f"{self.board_base}/{quote(board_name)}/{quote(posting_id)}"
 
     # JobSource --------------------------------------------------------------
 
     def fetch_jobs(self) -> list[Job]:
-        """Every published posting on every site, one request per site."""
+        """Every published posting on every board, one request per board."""
         finder = CountryFinder(self.country_hints, state_codes=self.state_codes)
         jobs: dict[str, Job] = {}
-        for site in self.sites:
-            for item in self._site_items(site):
-                job = self._to_job(item, site, finder)
-                jobs.setdefault(job.id, job)  # listed on two sites: keep the first
+        for board_name in self.board_names:
+            for item in self._board_items(board_name):
+                job = self._to_job(item, board_name, finder)
+                jobs.setdefault(job.id, job)  # listed on two boards: keep the first
         return list(jobs.values())
 
     def fetch_job_details(self, job: Job) -> JobDetails:
-        # Jobs saved before sites were recorded fall back to the first site.
-        site = job.extra.get("site") or self.sites[0]
-        url = self.posting_api_url(site, job.id)
+        # "site" is the key jobs saved by an earlier version recorded.
+        board_name = job.extra.get("board_name") or job.extra.get("site") or self.board_names[0]
+        url = self.posting_api_url(board_name, job.id)
         item = get_json(self.http, url, params={"mode": "json"})
         if not isinstance(item, dict) or "id" not in item:
             raise SourceError(f"Unexpected Lever response at {url}: no posting")
@@ -110,15 +110,15 @@ class LeverSource(JobSource):
 
     # Helpers ----------------------------------------------------------------
 
-    def _site_items(self, site: str) -> list[dict[str, Any]]:
-        """Every published posting on one site, as Lever returns it (a list)."""
-        url = self.site_api_url(site)
+    def _board_items(self, board_name: str) -> list[dict[str, Any]]:
+        """Every published posting on one board, as Lever returns it (a list)."""
+        url = self.board_api_url(board_name)
         data = get_json(self.http, url, params={"mode": "json"})
         if not isinstance(data, list):
             raise SourceError(f"Unexpected Lever response at {url}: expected a list of postings")
         return [item for item in data if isinstance(item, dict) and "id" in item]
 
-    def _to_job(self, item: dict[str, Any], site: str, finder: CountryFinder) -> Job:
+    def _to_job(self, item: dict[str, Any], board_name: str, finder: CountryFinder) -> Job:
         """Convert one posting to a Job."""
         posting_id = str(item["id"])
         categories = item.get("categories") if isinstance(item.get("categories"), dict) else {}
@@ -135,7 +135,7 @@ class LeverSource(JobSource):
             source=self.name,
             id=posting_id,
             title=str(item.get("text") or "").strip(),
-            url=item.get("hostedUrl") or self.posting_page_url(site, posting_id),
+            url=item.get("hostedUrl") or self.posting_page_url(board_name, posting_id),
             company=self.company,
             teams=unique_texts([categories.get("team"), categories.get("department")]),
             locations=locations,
@@ -144,7 +144,7 @@ class LeverSource(JobSource):
             work_modes=sort_work_modes([mode] if mode else []),
             employment_type=str(categories.get("commitment") or "").strip() or None,
             posted_at=_iso_from_millis(item.get("createdAt")),
-            extra={"site": site},
+            extra={"board_name": board_name},
         )
 
 def _iso_from_millis(value: Any) -> str | None:
