@@ -1,7 +1,8 @@
 .page {
   width: min(100% - 2 * var(--space-4), var(--measure));
   margin-inline: auto;
-  padding-block: var(--space-4) var(--space-6);
+  /* Less at the bottom than before: the footer brings its own spacing. */
+  padding-block: var(--space-4);
 }
 
 .header {

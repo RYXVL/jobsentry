@@ -1,0 +1,32 @@
+/* Shared by the Privacy and Terms pages: numbered-free sections of plain
+   text, styled like the Why page. */
+.sections {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.heading {
+  font-size: var(--text-lg);
+}
+
+.section p,
+.section ul {
+  margin-top: var(--space-2);
+  color: var(--ink-soft);
+}
+
+/* global.css removes list bullets; bring them back for prose lists. */
+.section ul {
+  padding-left: 1.2em;
+  list-style: disc;
+}
+
+.section li + li {
+  margin-top: var(--space-1);
+}
+
+.updated {
+  margin-top: var(--space-6);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}

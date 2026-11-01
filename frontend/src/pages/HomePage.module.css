@@ -1,16 +1,25 @@
-/* The name and two buttons, each on its own centred row. */
+/* A full-screen page: the name and two buttons centred in the space above,
+   the footer pinned to the bottom. */
 .home {
   display: grid;
+  grid-template-rows: 1fr auto;
   min-height: 100svh;
-  place-items: center;
   padding: var(--space-4);
 }
 
+/* The name and two buttons, each on its own centred row. */
 .inner {
   display: grid;
+  align-self: center;
   justify-items: center;
   gap: var(--space-4);
   text-align: center;
+}
+
+/* Same column width as the other pages, so the footer lines up with theirs. */
+.footer {
+  width: min(100%, var(--measure));
+  margin-inline: auto;
 }
 
 /* Logo and name side by side, centred on each other. */
@@ -31,7 +40,7 @@
 .logo {
   flex: none;
   width: auto;
-  height: 1em;
+  height: 0.9em;
 }
 
 /* A slow breathe: slightly fainter and larger, then back. */
