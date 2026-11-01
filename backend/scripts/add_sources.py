@@ -20,7 +20,8 @@ from pathlib import Path
 
 NEW_SOURCES = {
     "ashby": [],
-    "greenhouse": []
+    "greenhouse": [],
+    "lever": []
 }
 
 # ==============================
