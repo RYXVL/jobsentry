@@ -1,7 +1,8 @@
-"""JSON-file storage, one folder per source:
+"""JSON-file storage, one folder per source, plus one shared index:
 
-    <data_dir>/<source>/jobs.json         all jobs from the last `list`
+    <data_dir>/<source>/jobs.json         all jobs from the last refresh
     <data_dir>/<source>/jobs/<id>.json    full details from `show`
+    <data_dir>/todays-jobs.json           jobs posted today (services.today_jobs)
 """
 
 from __future__ import annotations
@@ -16,6 +17,9 @@ from typing import Any
 from ..core.models import JobDetails, JobSnapshot
 from .base import JobStore
 
+#: The today's-jobs index, directly inside data_dir.
+TODAY_FILE = "todays-jobs.json"
+
 class JsonJobStore(JobStore):
     def __init__(self, data_dir: str | Path):
         self.data_dir = Path(data_dir)
@@ -25,6 +29,9 @@ class JsonJobStore(JobStore):
 
     def details_path(self, source: str, job_id: str) -> Path:
         return self.data_dir / source / "jobs" / f"{job_id}.json"
+
+    def today_path(self) -> Path:
+        return self.data_dir / TODAY_FILE
 
     def save_snapshot(self, snapshot: JobSnapshot) -> str:
         path = self.snapshot_path(snapshot.source)
@@ -44,12 +51,21 @@ class JsonJobStore(JobStore):
         data = self._read(self.details_path(source, job_id))
         return JobDetails.from_dict(data) if data else None
 
+    def save_today(self, data: dict[str, Any]) -> str:
+        path = self.today_path()
+        self._write(path, data)
+        return str(path)
+
+    def load_today(self) -> dict[str, Any] | None:
+        return self._read(self.today_path())
+
     def clear(self) -> int:
-        """Delete only the files this store writes (jobs.json and jobs/*.json).
-        Anything else in data_dir is left alone, and a folder is removed only
-        once it is empty."""
+        """Delete only the files this store writes (jobs.json, jobs/*.json and
+        todays-jobs.json). Anything else in data_dir is left alone, and a
+        folder is removed only once it is empty."""
         if not self.data_dir.is_dir():
             return 0
+        self.today_path().unlink(missing_ok=True)
         cleared = 0
         for source_dir in self.data_dir.iterdir():
             if not source_dir.is_dir():

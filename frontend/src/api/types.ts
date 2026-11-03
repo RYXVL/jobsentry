@@ -86,7 +86,7 @@ export interface RefreshResult {
   job_count: number;
 }
 
-/** One source's result inside a refresh-all. */
+/** One source's result inside a fetch-all run. */
 export interface RefreshItem {
   source: string;
   company: string;
@@ -97,10 +97,24 @@ export interface RefreshItem {
   error: ApiErrorBody["error"] | null;
 }
 
-export interface RefreshAllResult {
-  results: RefreshItem[];
+/** GET and POST /sources/refresh: progress of fetching every source. */
+export interface RefreshRun {
+  /** "idle" means none has run since the API started. */
+  state: "idle" | "running" | "done";
+  started_at: string | null;
+  finished_at: string | null;
+  /** Sources in this run. */
+  total: number;
+  /** Sources finished, successfully or not. */
+  completed: number;
   succeeded: number;
   failed: number;
+  /** Jobs saved so far, across finished sources. */
+  jobs_fetched: number;
+  /** Companies being fetched right now. */
+  in_progress: string[];
+  /** One per finished source, in finishing order. */
+  results: RefreshItem[];
 }
 
 export interface ClearResult {

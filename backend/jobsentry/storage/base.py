@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from ..core.models import JobDetails, JobSnapshot
 
@@ -24,6 +25,14 @@ class JobStore(ABC):
         """Return saved details for a job, or None if not saved yet."""
 
     @abstractmethod
+    def save_today(self, data: dict[str, Any]) -> str:
+        """Save the today's-jobs index (see services.today_jobs); return where."""
+
+    @abstractmethod
+    def load_today(self) -> dict[str, Any] | None:
+        """Return the saved today's-jobs index, or None if there isn't one."""
+
+    @abstractmethod
     def clear(self) -> int:
-        """Delete every saved snapshot and job detail, for every source.
+        """Delete every saved snapshot, job detail and the today's-jobs index.
         Return how many sources had saved data."""

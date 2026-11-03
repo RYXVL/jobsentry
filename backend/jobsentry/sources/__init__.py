@@ -8,7 +8,13 @@
 """
 
 from .base import JobSource, SourceInfo
-from .registry import available_sources, create_source, get_source_class, register
+from .registry import (
+    available_sources,
+    create_source,
+    get_source_class,
+    register,
+    sources_in_order,
+)
 
 __all__ = [
     "JobSource",
@@ -17,4 +23,5 @@ __all__ = [
     "create_source",
     "get_source_class",
     "register",
+    "sources_in_order",
 ]

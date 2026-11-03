@@ -11,8 +11,8 @@ import type {
   JobFacets,
   JobListParams,
   JobPage,
-  RefreshAllResult,
   RefreshResult,
+  RefreshRun,
   Source,
 } from "./types";
 
@@ -34,7 +34,11 @@ export const api = {
   refreshSource: (source: string) =>
     request<RefreshResult>(`${sourcePath(source)}/refresh`, { method: "POST" }),
 
-  refreshAll: () => request<RefreshAllResult>("/sources/refresh", { method: "POST" }),
+  /** Starts fetching every source in the background (or returns the running run). */
+  startRefreshAll: () => request<RefreshRun>("/sources/refresh", { method: "POST" }),
+
+  /** Progress of the current or last fetch-all. */
+  getRefreshRun: () => request<RefreshRun>("/sources/refresh"),
 
   clearAll: () => request<ClearResult>("/sources/clear", { method: "POST" }),
 };

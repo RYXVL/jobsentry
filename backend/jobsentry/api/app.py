@@ -1,16 +1,20 @@
 """Builds the FastAPI application.
 
-`app` is what uvicorn serves. create_app() exists so tests (and 
+`app` is what uvicorn serves. create_app() exists so tests (and
 any future entry point) can build an app with their own Settings.
 """
 
 from __future__ import annotations
+
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .. import __version__
 from ..config import Settings
+from ..services.refresh_runner import runner
 from .dependencies import get_settings
 from .errors import register_error_handlers
 from .routes import ROUTERS
@@ -19,17 +23,27 @@ from .routes import ROUTERS
 API_PREFIX = "/api/v1"
 
 DESCRIPTION = """
-Local API for jobsentry. It runs the same scrapers as the CLI and serves the
-saved results to the frontend.
+Local API for jobsentry. It reads companies' public job boards and serves
+the saved results to the frontend.
 
 * **GET** endpoints read saved data (and fetch it once if nothing is saved yet).
-* **POST** `/sources/{source}/refresh` re-scrapes a company's career site.
+* **POST** `/sources/{source}/refresh` fetches one company's jobs again.
+* **POST** `/sources/refresh` starts fetching every company in the background;
+  **GET** `/sources/refresh` shows its progress.
 """
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """On shutdown, cancel any sources still queued by a fetch-all."""
+    yield
+    runner.shutdown()
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Build the app. If `settings` is given, every request uses it instead
     of the values from backend/.env (handy for tests)."""
-    app = FastAPI(title="jobsentry API", version=__version__, description=DESCRIPTION)
+    app = FastAPI(
+        title="jobsentry API", version=__version__, description=DESCRIPTION, lifespan=lifespan
+    )
 
     if settings is None:
         settings = get_settings()

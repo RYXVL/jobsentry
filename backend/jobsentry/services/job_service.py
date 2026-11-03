@@ -2,8 +2,8 @@
 
 Interfaces never talk to sources or storage directly; they call this, so
 behaviour (caching, refreshing, filtering, saving) stays identical everywhere.
-The module-level functions at the end (refresh_all, clear_all, query_all)
-work across every source at once.
+The module-level functions at the end (clear_all, query_all) work across
+every source at once; services.refresh_runner fetches every source.
 """
 
 from __future__ import annotations
@@ -12,14 +12,14 @@ import logging
 import threading
 from collections import Counter
 from collections.abc import Iterable
-from dataclasses import dataclass
 
 from ..config import Settings
-from ..core.exceptions import JobNotFoundError, JobsentryError, RefreshInProgressError
+from ..core.exceptions import JobNotFoundError, RefreshInProgressError
 from ..core.http import HttpClient
 from ..core.models import Job, JobDetails, JobSnapshot
 from ..sources import JobSource, available_sources, create_source
 from ..storage import JobStore, JsonJobStore
+from . import today_jobs
 from .queries import AllJobsPage, FacetValue, JobFacets, JobPage, JobQuery, SourceStatus
 
 log = logging.getLogger(__name__)
@@ -34,9 +34,10 @@ def _lock_for(source_name: str) -> threading.Lock:
         return _refresh_locks.setdefault(source_name, threading.Lock())
 
 class JobService:
-    def __init__(self, source: JobSource, store: JobStore):
+    def __init__(self, source: JobSource, store: JobStore, timezone: str = "UTC"):
         self.source = source
         self.store = store
+        self.timezone = timezone  # "today" for todays-jobs.json
 
     @classmethod
     def create(
@@ -45,20 +46,26 @@ class JobService:
         settings: Settings | None = None,
         http: HttpClient | None = None,
     ) -> JobService:
-        """Build a service for `source_name` with the configured store and client."""
+        """Build a service for `source_name` with the configured store and client.
+        Without `http`, it gets its own client (safe to use from any thread)."""
         settings = settings or Settings.from_env()
         http = http or HttpClient(
             timeout=settings.http_timeout,
             retries=settings.http_retries,
             headers={"User-Agent": settings.user_agent},
         )
-        return cls(create_source(source_name, http=http), JsonJobStore(settings.data_dir))
+        return cls(
+            create_source(source_name, http=http),
+            JsonJobStore(settings.data_dir),
+            timezone=settings.timezone,
+        )
 
     # Fetching ---------------------------------------------------------------
 
     def refresh_jobs(self) -> tuple[JobSnapshot, str]:
-        """Fetch every job from the source and save it. Returns (snapshot, location).
-        Raises RefreshInProgressError if this source is already being refreshed."""
+        """Fetch every job from the source and save it (and its part of
+        todays-jobs.json). Returns (snapshot, location). Raises
+        RefreshInProgressError if this source is already being refreshed."""
         lock = _lock_for(self.source.name)
         if not lock.acquire(blocking=False):
             raise RefreshInProgressError(
@@ -67,7 +74,9 @@ class JobService:
         try:
             log.info("Fetching job list from %s", self.source.company)
             snapshot = JobSnapshot(source=self.source.name, jobs=self.source.fetch_jobs())
-            return snapshot, self.store.save_snapshot(snapshot)
+            location = self.store.save_snapshot(snapshot)
+            self._update_today(snapshot)
+            return snapshot, location
         finally:
             lock.release()
 
@@ -107,6 +116,15 @@ class JobService:
                 return cached
         details, _ = self.get_job_details(job_id)
         return details
+
+    def _update_today(self, snapshot: JobSnapshot) -> None:
+        """Keep todays-jobs.json in step with this save. Never fails the
+        refresh: the file is only a fast path, and /today falls back to the
+        saved jobs if it's missing or out of date."""
+        try:
+            today_jobs.record(self.store, snapshot, self.source.company, self.timezone)
+        except Exception:
+            log.exception("Couldn't update todays-jobs.json for %s", self.source.company)
 
     # Reading saved data -----------------------------------------------------
 
@@ -150,39 +168,11 @@ def _count(values: Iterable[str]) -> list[FacetValue]:
     return [FacetValue(v, n) for v, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
 
 
-@dataclass(frozen=True)
-class RefreshOutcome:
-    """What happened when one source was refreshed by refresh_all()."""
-
-    source: str
-    company: str
-    snapshot: JobSnapshot | None = None
-    error: JobsentryError | None = None
-
-    @property
-    def ok(self) -> bool:
-        return self.error is None
-
-
-def refresh_all(settings: Settings | None = None, http: HttpClient | None = None) -> list[RefreshOutcome]:
-    """Refresh every source, one at a time to keep load on job boards low.
-    A failing source is recorded and skipped; the rest still run."""
-    settings = settings or Settings.from_env()
-    outcomes = []
-    for info in available_sources():
-        try:
-            snapshot, _ = JobService.create(info.name, settings=settings, http=http).refresh_jobs()
-            outcomes.append(RefreshOutcome(info.name, info.company, snapshot=snapshot))
-        except JobsentryError as error:
-            log.warning("Refreshing %s failed: %s", info.company, error)
-            outcomes.append(RefreshOutcome(info.name, info.company, error=error))
-    return outcomes
-
-
 def clear_all(settings: Settings | None = None) -> int:
-    """Delete all saved jobs and details for every source. Returns how many
+    """Delete all saved jobs, details and todays-jobs.json. Returns how many
     sources had data. Refuses while any refresh is running, so a refresh
-    never writes into a half-cleared folder."""
+    never writes into a half-cleared folder. (While a fetch-all is running,
+    use refresh_runner.runner.clear_saved, which also checks for the run.)"""
     with _refresh_locks_guard:
         busy = sorted(name for name, lock in _refresh_locks.items() if lock.locked())
     if busy:
@@ -197,21 +187,35 @@ def query_all(query: JobQuery, settings: Settings | None = None) -> AllJobsPage:
     """Filter, sort and page saved jobs across every source at once.
 
     Reads saved data only and never contacts a job board: a source that has
-    never been fetched is named in `unfetched` instead of being fetched."""
+    never been fetched is named in `unfetched` instead of being fetched.
+    When the query is for the date and time zone todays-jobs.json was built
+    for, that one file is read instead of every source's jobs.json."""
     settings = settings or Settings.from_env()
     store = JsonJobStore(settings.data_dir)
+    sections = today_jobs.read(store, query.posted_on, query.tz) if query.posted_on else None
+
     dated: list[Job] = []          # jobs matching the date filter only
     fetched_times: list[str] = []
     unfetched: list[str] = []
     for info in available_sources():
-        snapshot = store.load_snapshot(info.name)
-        if snapshot is None:
-            unfetched.append(info.company)
-            continue
-        fetched_times.append(snapshot.fetched_at)
-        dated += [job for job in snapshot.jobs if query.matches_date(job)]
+        if sections is not None:
+            section = sections.get(info.name)
+            if not isinstance(section, dict):
+                unfetched.append(info.company)
+                continue
+            fetched_times.append(str(section.get("fetched_at") or ""))
+            jobs = [Job.from_dict(job) for job in section.get("jobs") or []]
+        else:
+            snapshot = store.load_snapshot(info.name)
+            if snapshot is None:
+                unfetched.append(info.company)
+                continue
+            fetched_times.append(snapshot.fetched_at)
+            jobs = snapshot.jobs
+        dated += [job for job in jobs if query.matches_date(job)]
 
     matches = query.sort_jobs([job for job in dated if query.matches(job)])
+    fetched_times = [time for time in fetched_times if time]
     return AllJobsPage(
         total=len(matches),
         limit=query.limit,

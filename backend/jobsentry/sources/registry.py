@@ -10,11 +10,13 @@ the registry is used.
 from __future__ import annotations
 
 import threading
+from collections.abc import Iterable
 
 from ..core.exceptions import SourceNotFoundError
 from ..core.http import HttpClient
 from .base import JobSource, SourceInfo
 
+# Kept in registration order: loaders in LOADERS order, then catalog order.
 _REGISTRY: dict[str, type[JobSource]] = {}
 _discovered = False
 # The API serves requests on several threads; loading twice at once would
@@ -64,5 +66,16 @@ def create_source(name: str, http: HttpClient | None = None) -> JobSource:
     return get_source_class(name)(http=http)
 
 def available_sources() -> list[SourceInfo]:
+    """Every source, sorted by name (for listings)."""
     _discover()
     return [_REGISTRY[name].info() for name in sorted(_REGISTRY)]
+
+def sources_in_order(platform_order: Iterable[str]) -> list[SourceInfo]:
+    """Every source grouped by platform (strategy) in `platform_order`,
+    keeping catalog order within each platform. Platforms not listed come
+    last. Used to queue a fetch-all."""
+    _discover()
+    rank = {platform: index for index, platform in enumerate(platform_order)}
+    infos = [cls.info() for cls in _REGISTRY.values()]
+    # sorted() is stable, so catalog order is kept within each platform.
+    return sorted(infos, key=lambda info: rank.get(info.strategy, len(rank)))

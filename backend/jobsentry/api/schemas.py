@@ -7,6 +7,8 @@ frontend should rely on (e.g. a Job's internal `extra` dict is left out).
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 class Schema(BaseModel):
@@ -92,7 +94,7 @@ class ErrorOut(Schema):
     error: ErrorDetail
 
 class RefreshItemOut(Schema):
-    """One source's result inside a refresh-all."""
+    """One source's result inside a fetch-all run."""
     source: str
     company: str
     ok: bool
@@ -100,10 +102,24 @@ class RefreshItemOut(Schema):
     job_count: int | None = None
     error: ErrorDetail | None = Field(None, description="Why it failed; null when ok")
 
-class RefreshAllOut(Schema):
-    results: list[RefreshItemOut]
-    succeeded: int
-    failed: int
+class RefreshRunOut(Schema):
+    """Progress of the current (or last) fetch of every source."""
+    state: Literal["idle", "running", "done"] = Field(
+        description="idle: none has run since the API started"
+    )
+    started_at: str | None = None
+    finished_at: str | None = None
+    total: int = Field(0, description="Sources in this run")
+    completed: int = Field(0, description="Sources finished, successfully or not")
+    succeeded: int = 0
+    failed: int = 0
+    jobs_fetched: int = Field(0, description="Jobs saved so far, across finished sources")
+    in_progress: list[str] = Field(
+        default_factory=list, description="Companies being fetched right now"
+    )
+    results: list[RefreshItemOut] = Field(
+        default_factory=list, description="One per finished source, in finishing order"
+    )
 
 class ClearOut(Schema):
     cleared_sources: int = Field(description="How many sources had saved data")

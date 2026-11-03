@@ -11,9 +11,13 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 
 import { api } from "./endpoints";
 import type { AllJobsParams, JobListParams } from "./types";
+
+/** How often to check a running fetch-all's progress. */
+const REFRESH_POLL_MS = 1000;
 
 export const queryKeys = {
   sources: ["sources"] as const,
@@ -23,6 +27,8 @@ export const queryKeys = {
   // Kept under "sources" so refreshing or clearing updates it too. "@" can't
   // appear in a source name, so this never collides with one.
   allJobs: (params: AllJobsParams) => ["sources", "@all", "jobs", params] as const,
+  // Not under "sources": invalidating saved data must not re-poll the run.
+  refreshRun: ["refresh-run"] as const,
 };
 
 export function useSources() {
@@ -74,12 +80,39 @@ export function useRefreshSource(source: string) {
   });
 }
 
-/** Re-scrape every source, then refresh everything shown. */
-export function useRefreshAll() {
+/**
+ * Progress of fetching every source. Polls while a run is going, and every
+ * time another source finishes, refreshes everything shown about saved data
+ * (source cards, counts, today's jobs), so new data appears as it arrives.
+ */
+export function useRefreshRun() {
+  const queryClient = useQueryClient();
+  const run = useQuery({
+    queryKey: queryKeys.refreshRun,
+    queryFn: api.getRefreshRun,
+    refetchInterval: (query) => (query.state.data?.state === "running" ? REFRESH_POLL_MS : false),
+  });
+
+  const completed = run.data?.completed;
+  const lastCompleted = useRef(completed);
+  useEffect(() => {
+    if (completed === undefined) return;
+    if (lastCompleted.current !== undefined && completed !== lastCompleted.current) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.sources });
+    }
+    lastCompleted.current = completed;
+  }, [completed, queryClient]);
+
+  return run;
+}
+
+/** Start fetching every source in the background; progress via useRefreshRun. */
+export function useStartRefreshAll() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: api.refreshAll,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sources }),
+    mutationFn: api.startRefreshAll,
+    // Show the new run straight away, which also starts the polling.
+    onSuccess: (run) => queryClient.setQueryData(queryKeys.refreshRun, run),
   });
 }
 
@@ -90,7 +123,7 @@ export function useClearAll() {
   return useMutation({
     mutationFn: api.clearAll,
     onSuccess: () => {
-      queryClient.removeQueries({ predicate: (query) => query.queryKey.length > 1 });
+      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] === "sources" && query.queryKey.length > 1 });
       return queryClient.invalidateQueries({ queryKey: queryKeys.sources });
     },
   });
