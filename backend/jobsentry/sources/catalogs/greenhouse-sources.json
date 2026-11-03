@@ -170,7 +170,10 @@
     {
       "name": "spacex",
       "company": "SpaceX",
-      "board_name": "spacex",
+      "board_name": [
+        "spacex",
+        "spacexglobal"
+      ],
       "homepage": "https://www.spacex.com/careers",
       "state_codes": true
     },
@@ -203,6 +206,79 @@
       "company": "Razorpay",
       "board_name": "razorpaysoftwareprivatelimited",
       "homepage": "https://razorpay.com/careers/"
+    },
+    {
+      "name": "samsung-semiconductor",
+      "company": "Samsung Semiconductor",
+      "board_name": "samsungsemiconductor",
+      "homepage": "https://semiconductor.samsung.com/about-us/careers/jobs/"
+    },
+    {
+      "name": "sony-interactive-entertainment",
+      "company": "Sony Interactive Entertainment",
+      "board_name": "sonyinteractiveentertainmentglobal",
+      "homepage": "https://careers.playstation.com/"
+    },
+    {
+      "name": "waymo",
+      "company": "Waymo",
+      "board_name": "waymo",
+      "homepage": "https://waymo.com/careers"
+    },
+    {
+      "name": "xai",
+      "company": "xAI",
+      "board_name": "xai",
+      "homepage": "https://x.ai/careers",
+      "state_codes": true
+    },
+    {
+      "name": "lg-electronics",
+      "company": "LG Electronics",
+      "board_name": "lgelectronics",
+      "homepage": "https://globalcareers.lge.com/",
+      "country_hints": {
+        "Georgia": "US"
+      },
+      "state_codes": true
+    },
+    {
+      "name": "roblox",
+      "company": "Roblox",
+      "board_name": "roblox",
+      "homepage": "https://roblox.com/careers"
+    },
+    {
+      "name": "shein",
+      "company": "Shein",
+      "board_name": "shein",
+      "homepage": "https://careers.shein.com/"
+    },
+    {
+      "name": "epic-games",
+      "company": "Epic Games",
+      "board_name": "epicgames",
+      "homepage": "https://www.epicgames.com/site/careers"
+    },
+    {
+      "name": "rockstar-games",
+      "company": "Rockstar Games",
+      "board_name": "rockstargames",
+      "homepage": "https://rockstargames.com/careers"
+    },
+    {
+      "name": "twitch",
+      "company": "Twitch",
+      "board_name": "twitch",
+      "homepage": "https://twitch.com/careers",
+      "state_codes": true
+    },
+    {
+      "name": "the-new-york-times",
+      "company": "The New York Times",
+      "board_name": "thenewyorktimes",
+      "homepage": "https://www.nytco.com/careers/",
+      "state_codes": true
     }
   ]
 }
