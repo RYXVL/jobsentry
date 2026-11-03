@@ -124,6 +124,12 @@
       "company": "Mistral",
       "board_name": "mistral.ai",
       "homepage": "https://mistral.ai/careers/"
+    },
+    {
+      "name": "pulse",
+      "company": "Pulse",
+      "board_name": "pulse",
+      "homepage": "https://pulse.com/careers"
     }
   ]
 }

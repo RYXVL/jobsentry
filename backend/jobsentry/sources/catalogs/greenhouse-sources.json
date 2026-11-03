@@ -112,7 +112,13 @@
     {
       "name": "doordash",
       "company": "DoorDash",
-      "board_token": ["doordashcanada", "doordashindia", "doordashinternational", "doordashmexico", "doordashusa"],
+      "board_token": [
+        "doordashcanada",
+        "doordashindia",
+        "doordashinternational",
+        "doordashmexico",
+        "doordashusa"
+      ],
       "homepage": "https://www.doordash.com/careers",
       "country_hints": {
         "Dublin, CA": "US",
@@ -138,7 +144,9 @@
       "company": "Okta",
       "board_token": "okta",
       "homepage": "https://www.okta.com/careers",
-      "country_hints": { "Georgia": "US" }
+      "country_hints": {
+        "Georgia": "US"
+      }
     },
     {
       "name": "reddit",
@@ -171,6 +179,18 @@
       "company": "Vercel",
       "board_token": "vercel",
       "homepage": "https://vercel.com/careers"
+    },
+    {
+      "name": "cognite",
+      "company": "Cognite",
+      "board_token": "cognite",
+      "homepage": "https://cognite.com/careers"
+    },
+    {
+      "name": "crunchyroll",
+      "company": "Crunchyroll",
+      "board_token": "crunchyroll",
+      "homepage": "https://crunchyroll.com/careers"
     }
   ]
 }
