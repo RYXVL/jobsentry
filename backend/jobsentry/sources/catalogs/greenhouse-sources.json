@@ -191,6 +191,18 @@
       "company": "Crunchyroll",
       "board_name": "crunchyroll",
       "homepage": "https://crunchyroll.com/careers"
+    },
+    {
+      "name": "hudson-river-trading",
+      "company": "Hudson River Trading",
+      "board_name": "wehrtyou",
+      "homepage": "https://www.hudsonrivertrading.com/careers/"
+    },
+    {
+      "name": "razorpay",
+      "company": "Razorpay",
+      "board_name": "razorpaysoftwareprivatelimited",
+      "homepage": "https://razorpay.com/careers/"
     }
   ]
 }
