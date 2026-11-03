@@ -9,8 +9,8 @@ File format:
         {
           "name": "figma",             required. Lowercase; used in URLs and data/<name>/
           "company": "Figma",          required. Display name
-          "board_token": "figma",      required. The <token> in <board_base>/<token>,
-                                       or a list of tokens for a company with several
+          "board_name": "figma",       required. The <name> in <board_base>/<name>,
+                                       or a list of names for a company with several
                                        boards (e.g. one per region), merged into one source
           "homepage": "https://...",   optional. Defaults to the first board's page
           "country_hints": {           optional. Hints for this company only, e.g.
@@ -23,8 +23,8 @@ File format:
       ]
     }
 
-To add a company: check that <api_base>/<token>/jobs returns jobs in a
-browser (for every token), add an entry, restart the API, then refresh it.
+To add a company: check that <api_base>/<name>/jobs returns jobs in a
+browser (for every name), add an entry, restart the API, then refresh it.
 """
 
 from __future__ import annotations
@@ -51,9 +51,10 @@ from ._catalog import (
 CATALOG_FILE = "greenhouse-sources.json"
 
 _TOP_KEYS = ("api_base", "board_base", "sources")
-_SOURCE_REQUIRED = ("name", "company", "board_token")
+_SOURCE_REQUIRED = ("name", "company", "board_name")
 _SOURCE_OPTIONAL = ("homepage", "country_hints", "state_codes")
-_BOARD_TOKEN = re.compile(r"^[A-Za-z0-9_-]+$")
+#: Greenhouse board names (often called "board tokens"), e.g. "stripe".
+_BOARD_NAME = re.compile(r"^[A-Za-z0-9_-]+$")
 
 def load() -> list[type[GreenhouseSource]]:
     """Read the catalog and register one source per entry. Both the catalog
@@ -87,21 +88,21 @@ def build_sources(
             raise ConfigError(f"{where} appears twice (entries {seen[name]} and {index})")
         seen[name] = index
 
-        board_tokens = get_token_list(
-            entry, "board_token", where, _BOARD_TOKEN, "letters, digits, - or _"
+        board_names = get_token_list(
+            entry, "board_name", where, _BOARD_NAME, "letters, digits, - or _"
         )
         own_hints = get_country_hints(entry, "country_hints", where) if "country_hints" in entry else {}
         company = get_str(entry, "company", where)
         classes.append(make_source_class(
             GreenhouseSource,
-            f"{company} jobs from Greenhouse board(s): {', '.join(board_tokens)}.",
+            f"{company} jobs from Greenhouse board(s): {', '.join(board_names)}.",
             name=name,
             company=company,
-            board_tokens=board_tokens,
+            board_names=board_names,
             homepage=(
                 get_url(entry, "homepage", where)
                 if "homepage" in entry
-                else f"{board_base}/{board_tokens[0]}"
+                else f"{board_base}/{board_names[0]}"
             ),
             country_hints={**(shared_hints or {}), **own_hints},
             state_codes=get_bool(entry, "state_codes", where),

@@ -5,19 +5,19 @@
     {
       "name": "anthropic",
       "company": "Anthropic",
-      "board_token": "anthropic",
+      "board_name": "anthropic",
       "homepage": "https://www.anthropic.com/careers"
     },
     {
       "name": "figma",
       "company": "Figma",
-      "board_token": "figma",
+      "board_name": "figma",
       "homepage": "https://www.figma.com/careers"
     },
     {
       "name": "stripe",
       "company": "Stripe",
-      "board_token": "stripe",
+      "board_name": "stripe",
       "homepage": "https://stripe.com/careers",
       "country_hints": {
         "ATL": "US",
@@ -31,31 +31,31 @@
     {
       "name": "affirm",
       "company": "Affirm",
-      "board_token": "affirm",
+      "board_name": "affirm",
       "homepage": "https://www.affirm.com/careers"
     },
     {
       "name": "airbnb",
       "company": "Airbnb",
-      "board_token": "airbnb",
+      "board_name": "airbnb",
       "homepage": "https://www.airbnb.com/careers"
     },
     {
       "name": "cloudflare",
       "company": "Cloudflare",
-      "board_token": "cloudflare",
+      "board_name": "cloudflare",
       "homepage": "https://www.cloudflare.com/careers"
     },
     {
       "name": "coinbase",
       "company": "Coinbase",
-      "board_token": "coinbase",
+      "board_name": "coinbase",
       "homepage": "https://www.coinbase.com/careers"
     },
     {
       "name": "databricks",
       "company": "Databricks",
-      "board_token": "databricks",
+      "board_name": "databricks",
       "homepage": "https://www.databricks.com/careers",
       "country_hints": {
         "Georgia": "US"
@@ -64,55 +64,55 @@
     {
       "name": "discord",
       "company": "Discord",
-      "board_token": "discord",
+      "board_name": "discord",
       "homepage": "https://www.discord.com/careers"
     },
     {
       "name": "gitlab",
       "company": "GitLab",
-      "board_token": "gitlab",
+      "board_name": "gitlab",
       "homepage": "https://www.about.gitlab.com/jobs/"
     },
     {
       "name": "instacart",
       "company": "Instacart",
-      "board_token": "instacart",
+      "board_name": "instacart",
       "homepage": "https://www.instacart.com/careers"
     },
     {
       "name": "lyft",
       "company": "Lyft",
-      "board_token": "lyft",
+      "board_name": "lyft",
       "homepage": "https://www.lyft.com/careers"
     },
     {
       "name": "pinterest",
       "company": "Pinterest",
-      "board_token": "pinterest",
+      "board_name": "pinterest",
       "homepage": "https://www.pinterest.com/careers"
     },
     {
       "name": "robinhood",
       "company": "Robinhood",
-      "board_token": "robinhood",
+      "board_name": "robinhood",
       "homepage": "https://www.robinhood.com/careers"
     },
     {
       "name": "airtable",
       "company": "Airtable",
-      "board_token": "airtable",
+      "board_name": "airtable",
       "homepage": "https://www.airtable.com/careers"
     },
     {
       "name": "datadog",
       "company": "Datadog",
-      "board_token": "datadog",
+      "board_name": "datadog",
       "homepage": "https://www.datadog.com/careers"
     },
     {
       "name": "doordash",
       "company": "DoorDash",
-      "board_token": [
+      "board_name": [
         "doordashcanada",
         "doordashindia",
         "doordashinternational",
@@ -129,20 +129,20 @@
     {
       "name": "dropbox",
       "company": "Dropbox",
-      "board_token": "dropbox",
+      "board_name": "dropbox",
       "homepage": "https://www.dropbox.jobs"
     },
     {
       "name": "duolingo",
       "company": "Duolingo",
-      "board_token": "duolingo",
+      "board_name": "duolingo",
       "homepage": "https://www.duolingo.com/careers",
       "state_codes": true
     },
     {
       "name": "okta",
       "company": "Okta",
-      "board_token": "okta",
+      "board_name": "okta",
       "homepage": "https://www.okta.com/careers",
       "country_hints": {
         "Georgia": "US"
@@ -151,45 +151,45 @@
     {
       "name": "reddit",
       "company": "Reddit",
-      "board_token": "reddit",
+      "board_name": "reddit",
       "homepage": "https://redditinc.com/careers",
       "state_codes": true
     },
     {
       "name": "abnormal-ai",
       "company": "Abnormal AI",
-      "board_token": "abnormalsecurity",
+      "board_name": "abnormalsecurity",
       "homepage": "https://abnormal.ai/careers"
     },
     {
       "name": "mongodb",
       "company": "MongoDB",
-      "board_token": "mongodb",
+      "board_name": "mongodb",
       "homepage": "https://www.mongodb.com/company/careers"
     },
     {
       "name": "spacex",
       "company": "SpaceX",
-      "board_token": "spacex",
+      "board_name": "spacex",
       "homepage": "https://www.spacex.com/careers",
       "state_codes": true
     },
     {
       "name": "vercel",
       "company": "Vercel",
-      "board_token": "vercel",
+      "board_name": "vercel",
       "homepage": "https://vercel.com/careers"
     },
     {
       "name": "cognite",
       "company": "Cognite",
-      "board_token": "cognite",
+      "board_name": "cognite",
       "homepage": "https://cognite.com/careers"
     },
     {
       "name": "crunchyroll",
       "company": "Crunchyroll",
-      "board_token": "crunchyroll",
+      "board_name": "crunchyroll",
       "homepage": "https://crunchyroll.com/careers"
     }
   ]

@@ -3,9 +3,9 @@
 Greenhouse publishes every hosted board as a public, read-only JSON API
 (https://developers.greenhouse.io/job-board.html):
 
-    GET <api_base>/<token>/jobs           every job (without descriptions)
-    GET <api_base>/<token>/departments    departments, each with its jobs' IDs
-    GET <api_base>/<token>/jobs/<id>      one job, with its description
+    GET <api_base>/<board name>/jobs           every job (without descriptions)
+    GET <api_base>/<board name>/departments    departments, each with its jobs' IDs
+    GET <api_base>/<board name>/jobs/<id>      one job, with its description
 
 A refresh makes two small requests per board (jobs, then departments),
 instead of one very large one with every description (?content=true).
@@ -14,13 +14,13 @@ Descriptions are only fetched when a job's details are opened.
 Companies aren't written as Python: each is an entry in
 catalogs/greenhouse-sources.json, and loaders/greenhouse_loader.py builds a
 subclass of GreenhouseSource for it with these class attributes set:
-name, company, homepage, board_tokens, api_base, board_base, country_hints,
+name, company, homepage, board_names, api_base, board_base, country_hints,
 state_codes.
 
 A company can have several boards (e.g. one per region). A refresh fetches
 each board and merges them; Greenhouse job IDs are unique across all
 boards, so a job listed on two boards is kept once. Each job records its
-board in Job.extra["board_token"], so details are fetched from the right one.
+board in Job.extra["board_name"], so details are fetched from the right one.
 
 How Greenhouse's fields map onto Job:
 
@@ -78,9 +78,10 @@ class GreenhouseSource(JobSource):
 
     strategy = "greenhouse"
 
-    #: The company's board tokens: each is the <token> in <board_base>/<token>.
-    #: Usually one; several for companies with a board per region.
-    board_tokens: ClassVar[tuple[str, ...]]
+    #: The company's boards: each is the <name> in <board_base>/<name>
+    #: (Greenhouse calls it a "board token"). Usually one; several for
+    #: companies with a board per region.
+    board_names: ClassVar[tuple[str, ...]]
     #: Greenhouse API root, e.g. https://boards-api.greenhouse.io/v1/boards
     api_base: ClassVar[str]
     #: Public board site root, e.g. https://boards.greenhouse.io
@@ -94,17 +95,17 @@ class GreenhouseSource(JobSource):
 
     # URLs -------------------------------------------------------------------
 
-    def jobs_api_url(self, board_token: str) -> str:
-        return f"{self.api_base}/{board_token}/jobs"
+    def jobs_api_url(self, board_name: str) -> str:
+        return f"{self.api_base}/{board_name}/jobs"
 
-    def departments_api_url(self, board_token: str) -> str:
-        return f"{self.api_base}/{board_token}/departments"
+    def departments_api_url(self, board_name: str) -> str:
+        return f"{self.api_base}/{board_name}/departments"
 
-    def job_api_url(self, board_token: str, job_id: str) -> str:
-        return f"{self.api_base}/{board_token}/jobs/{job_id}"
+    def job_api_url(self, board_name: str, job_id: str) -> str:
+        return f"{self.api_base}/{board_name}/jobs/{job_id}"
 
-    def job_page_url(self, board_token: str, job_id: str) -> str:
-        return f"{self.board_base}/{board_token}/jobs/{job_id}"
+    def job_page_url(self, board_name: str, job_id: str) -> str:
+        return f"{self.board_base}/{board_name}/jobs/{job_id}"
 
     # JobSource --------------------------------------------------------------
 
@@ -112,18 +113,20 @@ class GreenhouseSource(JobSource):
         """Every job on every board: two small requests per board."""
         finder = CountryFinder(self.country_hints, state_codes=self.state_codes)
         jobs: dict[str, Job] = {}
-        for board_token in self.board_tokens:
-            teams_by_job = self._teams_by_job(board_token)
-            for item in self._board_items(board_token):
+        for board_name in self.board_names:
+            teams_by_job = self._teams_by_job(board_name)
+            for item in self._board_items(board_name):
                 teams = teams_by_job.get(str(item["id"]), [])
-                job = self._to_job(item, board_token, teams, finder)
+                job = self._to_job(item, board_name, teams, finder)
                 jobs.setdefault(job.id, job)  # listed on two boards: keep the first
         return list(jobs.values())
 
     def fetch_job_details(self, job: Job) -> JobDetails:
-        # Jobs saved before boards were recorded fall back to the first board.
-        board_token = job.extra.get("board_token") or self.board_tokens[0]
-        url = self.job_api_url(board_token, job.id)
+        # "board_token" is the key jobs saved by an earlier version recorded.
+        board_name = (
+            job.extra.get("board_name") or job.extra.get("board_token") or self.board_names[0]
+        )
+        url = self.job_api_url(board_name, job.id)
         item = get_json(self.http, url)
         if not isinstance(item, dict) or "id" not in item:
             raise SourceError(f"Unexpected Greenhouse response at {url}: no job")
@@ -139,23 +142,23 @@ class GreenhouseSource(JobSource):
 
     # Helpers ----------------------------------------------------------------
 
-    def _board_items(self, board_token: str) -> list[dict[str, Any]]:
+    def _board_items(self, board_name: str) -> list[dict[str, Any]]:
         """Every job entry on one board, without descriptions."""
-        url = self.jobs_api_url(board_token)
+        url = self.jobs_api_url(board_name)
         data = get_json(self.http, url)
         items = data.get("jobs") if isinstance(data, dict) else None
         if not isinstance(items, list):
             raise SourceError(f"Unexpected Greenhouse response at {url}: no 'jobs' list")
         return [item for item in items if isinstance(item, dict) and "id" in item]
 
-    def _teams_by_job(self, board_token: str) -> dict[str, list[str]]:
+    def _teams_by_job(self, board_name: str) -> dict[str, list[str]]:
         """{job ID: department names} for one board. Optional: if the request
         fails, the board's jobs are still saved, just without teams."""
-        url = self.departments_api_url(board_token)
+        url = self.departments_api_url(board_name)
         try:
             data = get_json(self.http, url)
         except SourceError as e:
-            log.warning("%s: departments unavailable for %s: %s", self.company, board_token, e)
+            log.warning("%s: departments unavailable for %s: %s", self.company, board_name, e)
             return {}
 
         departments = data.get("departments") if isinstance(data, dict) else None
@@ -174,7 +177,7 @@ class GreenhouseSource(JobSource):
         return teams
 
     def _to_job(
-        self, item: dict[str, Any], board_token: str, teams: list[str], finder: CountryFinder
+        self, item: dict[str, Any], board_name: str, teams: list[str], finder: CountryFinder
     ) -> Job:
         """Convert one board entry to a Job."""
         job_id = str(item["id"])
@@ -195,7 +198,7 @@ class GreenhouseSource(JobSource):
             source=self.name,
             id=job_id,
             title=str(item.get("title") or "").strip(),
-            url=item.get("absolute_url") or self.job_page_url(board_token, job_id),
+            url=item.get("absolute_url") or self.job_page_url(board_name, job_id),
             company=self.company,
             teams=unique_texts(teams),
             locations=locations,
@@ -205,7 +208,7 @@ class GreenhouseSource(JobSource):
             employment_type=_metadata_value(item, EMPLOYMENT_TYPE_FIELDS),
             posted_at=item.get("first_published"),
             updated_at=item.get("updated_at"),
-            extra={"board_token": board_token},
+            extra={"board_name": board_name},
         )
 
 def _metadata_value(item: dict[str, Any], names: frozenset[str]) -> str | None:
