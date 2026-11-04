@@ -136,6 +136,121 @@
       "company": "Kong",
       "board_name": "kong",
       "homepage": "https://careers.konghq.com/"
+    },
+    {
+      "name": "linear",
+      "company": "Linear",
+      "board_name": "linear",
+      "homepage": "https://linear.app/careers"
+    },
+    {
+      "name": "airwallex",
+      "company": "Airwallex",
+      "board_name": "airwallex",
+      "homepage": "https://airwallex.com/careers",
+      "country_hints": {
+        "CN": "CN",
+        "VN": "VN",
+        "CA": "CA",
+        "LT": "LT"
+      }
+    },
+    {
+      "name": "replit",
+      "company": "Replit",
+      "board_name": "replit",
+      "homepage": "https://replit.com/careers",
+      "state_codes": true
+    },
+    {
+      "name": "posthog",
+      "company": "PostHog",
+      "board_name": "posthog",
+      "homepage": "https://posthog.com/careers"
+    },
+    {
+      "name": "1password",
+      "company": "1Password",
+      "board_name": "1password",
+      "homepage": "https://1password.com/careers"
+    },
+    {
+      "name": "cohere",
+      "company": "Cohere",
+      "board_name": "cohere",
+      "homepage": "https://cohere.com/careers",
+      "country_hints": {
+        "Halifax": "CA",
+        "Richmond": "US",
+        "Victoria": "CA"
+      }
+    },
+    {
+      "name": "deel",
+      "company": "Deel",
+      "board_name": "deel",
+      "homepage": "https://deel.com/careers"
+    },
+    {
+      "name": "mercury",
+      "company": "Mercury",
+      "board_name": "mercury",
+      "homepage": "https://mercury.com/careers"
+    },
+    {
+      "name": "benchling",
+      "company": "Benchling",
+      "board_name": "benchling",
+      "homepage": "https://benchling.com/careers",
+      "country_hints": {
+        "Cambridge": "GB"
+      },
+      "state_codes": true
+    },
+    {
+      "name": "vanta",
+      "company": "Vanta",
+      "board_name": "vanta",
+      "homepage": "https://vanta.com/careers"
+    },
+    {
+      "name": "crusoe",
+      "company": "Crusoe",
+      "board_name": "crusoe",
+      "homepage": "https://www.crusoe.ai/about/careers"
+    },
+    {
+      "name": "applied-intuition",
+      "company": "Applied Intuition",
+      "board_name": "applied",
+      "homepage": "https://www.appliedintuition.com/careers",
+      "country_hints": {
+        "KSA": "SA"
+      }
+    },
+    {
+      "name": "sierra",
+      "company": "Sierra",
+      "board_name": "sierra",
+      "homepage": "https://sierra.ai/careers"
+    },
+    {
+      "name": "checkout-com",
+      "company": "Checkout.com",
+      "board_name": "checkout.com",
+      "homepage": "https://checkout.com/careers"
+    },
+    {
+      "name": "air-apps",
+      "company": "Air Apps",
+      "board_name": "airapps",
+      "homepage": "https://jobs.ashbyhq.com/airapps"
+    },
+    {
+      "name": "kaluza",
+      "company": "Kaluza",
+      "board_name": "kaluza",
+      "homepage": "https://kaluza.com/careers"
     }
   ]
 }
