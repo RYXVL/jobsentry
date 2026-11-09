@@ -1,0 +1,13 @@
+{
+  "api_base": "https://api.smartrecruiters.com/v1/companies",
+  "board_base": "https://jobs.smartrecruiters.com",
+  "max_pages": 100,
+  "sources": [
+    {
+      "name": "wise",
+      "company": "Wise",
+      "board_name": "Wise",
+      "homepage": "https://wise.jobs"
+    }
+  ]
+}

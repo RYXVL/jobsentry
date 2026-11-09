@@ -65,7 +65,10 @@ class JobService:
     def refresh_jobs(self) -> tuple[JobSnapshot, str]:
         """Fetch every job from the source and save it (and its part of
         todays-jobs.json). Returns (snapshot, location). Raises
-        RefreshInProgressError if this source is already being refreshed."""
+        RefreshInProgressError if this source is already being refreshed.
+
+        Before saving, the source's check_refresh() sees the new jobs and the
+        previous save; if it raises, nothing is saved."""
         lock = _lock_for(self.source.name)
         if not lock.acquire(blocking=False):
             raise RefreshInProgressError(
@@ -73,7 +76,9 @@ class JobService:
             )
         try:
             log.info("Fetching job list from %s", self.source.company)
-            snapshot = JobSnapshot(source=self.source.name, jobs=self.source.fetch_jobs())
+            jobs = self.source.fetch_jobs()
+            self.source.check_refresh(jobs, self.store.load_snapshot(self.source.name))
+            snapshot = JobSnapshot(source=self.source.name, jobs=jobs)
             location = self.store.save_snapshot(snapshot)
             self._update_today(snapshot)
             return snapshot, location

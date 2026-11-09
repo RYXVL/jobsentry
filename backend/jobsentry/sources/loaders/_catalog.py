@@ -93,6 +93,19 @@ def get_bool(obj: dict[str, Any], key: str, where: str, default: bool = False) -
         raise ConfigError(f"{where}: '{key}' must be true or false, got {value!r}")
     return value
 
+def get_int(
+    obj: dict[str, Any], key: str, where: str, minimum: int, maximum: int | None = None
+) -> int:
+    """A whole number between `minimum` and `maximum` (if given)."""
+    value = obj[key]
+    # bool is a kind of int in Python; reject it so `true` isn't read as 1.
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ConfigError(f"{where}: '{key}' must be a whole number, got {value!r}")
+    if value < minimum or (maximum is not None and value > maximum):
+        bounds = f"between {minimum} and {maximum}" if maximum is not None else f"at least {minimum}"
+        raise ConfigError(f"{where}: '{key}' must be {bounds}, got {value}")
+    return value
+
 def get_token_list(
     obj: dict[str, Any], key: str, where: str, pattern: re.Pattern[str], expected: str
 ) -> tuple[str, ...]:

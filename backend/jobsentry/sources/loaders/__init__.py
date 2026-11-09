@@ -7,9 +7,9 @@ the helpers in _catalog.py, and add it to LOADERS.
 
 from __future__ import annotations
 
-from . import ashby_loader, greenhouse_loader, lever_loader
+from . import ashby_loader, greenhouse_loader, lever_loader, smartrecruiters_loader
 
-LOADERS = (greenhouse_loader, ashby_loader, lever_loader)
+LOADERS = (greenhouse_loader, ashby_loader, lever_loader, smartrecruiters_loader)
 
 def load_all() -> None:
     """Run every loader. Called once by the registry."""

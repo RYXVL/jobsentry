@@ -14,7 +14,8 @@ Scraping
 
 Fetch all jobs
     JOBSENTRY_REFRESH_WORKERS  companies fetched at the same time (default: 5)
-    JOBSENTRY_REFRESH_ORDER    platforms in fetch order (default: ashby,greenhouse,lever)
+    JOBSENTRY_REFRESH_ORDER    platforms in fetch order
+                               (default: ashby,greenhouse,lever,smartrecruiters)
     JOBSENTRY_TIMEZONE         IANA time zone for "today" (default: this computer's)
 
 API
@@ -49,7 +50,7 @@ DEFAULT_CORS_ORIGINS = (
 )
 
 #: Platforms (source strategies) in the order "Fetch all jobs" works through them.
-DEFAULT_REFRESH_ORDER = ("ashby", "greenhouse", "lever")
+DEFAULT_REFRESH_ORDER = ("ashby", "greenhouse", "lever", "smartrecruiters")
 
 #: Upper bound on refresh workers, so a typo can't start hundreds of threads.
 MAX_REFRESH_WORKERS = 32

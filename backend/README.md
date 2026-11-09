@@ -1,8 +1,8 @@
 # Job Sentry Backend
 
 Collects job listings from companies' public job board APIs (Greenhouse,
-Ashby and Lever) into one common JSON format, and serves them to the
-frontend through a local API. Run every command from this folder.
+Ashby, Lever and SmartRecruiters) into one common JSON format, and serves
+them to the frontend through a local API. Run every command from this folder.
 
 ```bash
 python -m jobsentry sources                     # list available sources
@@ -13,7 +13,7 @@ python -m jobsentry.api                         # start the API on http://127.0.
 python scripts/missing_countries.py <source>    # saved locations that match no country
 ```
 
-`<source>` is a source's `name` from its catalog, e.g. `stripe`, `supabase`, `spotify`.
+`<source>` is a source's `name` from its catalog, e.g. `stripe`, `supabase`, `spotify`, `wise`.
 
 ## Structure
 
@@ -31,20 +31,23 @@ backend/
 │   │   ├── base.py              JobSource interface
 │   │   ├── registry.py          register(), create_source(), loads the catalogs
 │   │   ├── catalogs/            JSON data, read by the loaders
-│   │   │   ├── ashby-sources.json        companies on Ashby
-│   │   │   ├── greenhouse-sources.json   companies on Greenhouse
-│   │   │   ├── lever-sources.json        companies on Lever
-│   │   │   └── country-hints.json        location text -> country, shared by all
+│   │   │   ├── ashby-sources.json             companies on Ashby
+│   │   │   ├── greenhouse-sources.json        companies on Greenhouse
+│   │   │   ├── lever-sources.json             companies on Lever
+│   │   │   ├── smartrecruiters-sources.json   companies on SmartRecruiters
+│   │   │   └── country-hints.json             location text -> country, shared by all
 │   │   ├── loaders/             read a catalog, register a source per entry
 │   │   │   ├── _catalog.py      shared reading and validation helpers
 │   │   │   ├── ashby_loader.py
 │   │   │   ├── greenhouse_loader.py
-│   │   │   └── lever_loader.py
+│   │   │   ├── lever_loader.py
+│   │   │   └── smartrecruiters_loader.py
 │   │   └── strategies/          one base class per platform's API
 │   │       ├── _helpers.py      small helpers the strategies share
 │   │       ├── ashby.py
 │   │       ├── greenhouse.py
-│   │       └── lever.py
+│   │       ├── lever.py
+│   │       └── smartrecruiters.py
 │   ├── storage/                 where data is saved
 │   │   ├── base.py              JobStore interface
 │   │   └── json_store.py        JSON files under data/
@@ -88,21 +91,22 @@ Each layer only depends on the ones below it. Sources never save files, storage 
 
 Job Sentry only reads data it's allowed to read. Before adding a company:
 
-1. **Prefer an official public API.** Job board platforms publish hosted boards as public APIs. Check where a company's "Apply" links go: `boards.greenhouse.io` / `job-boards.greenhouse.io`, `jobs.ashbyhq.com` and `jobs.lever.co` / `jobs.eu.lever.co` all mean a public board exists.
+1. **Prefer an official public API.** Job board platforms publish hosted boards as public APIs. Check where a company's "Apply" links go: `boards.greenhouse.io` / `job-boards.greenhouse.io`, `jobs.ashbyhq.com`, `jobs.lever.co` / `jobs.eu.lever.co` and `jobs.smartrecruiters.com` all mean a public board exists.
 2. **Read the terms of use** of any site you'd read directly. If they forbid automated access (robots, spiders, scraping), don't add it.
 3. **Check `robots.txt`** for any site you'd read directly. It doesn't override the terms of use.
 4. **Never log in, and never work around a block.** A 401 or 403 raises `SourceBlockedError`, which is never retried.
-5. **Keep refreshes light.** Each source makes one or two requests per board. If refresh results show rate limiting, lower `JOBSENTRY_REFRESH_WORKERS`.
+5. **Keep refreshes light.** Most sources make one or two requests per board; large SmartRecruiters boards make one per 100 jobs. If refresh results show rate limiting, lower `JOBSENTRY_REFRESH_WORKERS`.
 
 ## Adding a company
 
-Companies are data, not code. Find the company's **board name**: the last part of its board URL (`jobs.ashbyhq.com/<name>`, `boards.greenhouse.io/<name>`, `jobs.lever.co/<name>`). Check that it works in a browser, then add an entry to that platform's catalog in `sources/catalogs/`.
+Companies are data, not code. Find the company's **board name**: the last part of its board URL (`jobs.ashbyhq.com/<name>`, `boards.greenhouse.io/<name>`, `jobs.lever.co/<name>`, `jobs.smartrecruiters.com/<name>`). Check that it works in a browser, then add an entry to that platform's catalog in `sources/catalogs/`.
 
 | Platform | Catalog | Check this URL shows jobs |
 |---|---|---|
 | Ashby | `ashby-sources.json` | `https://api.ashbyhq.com/posting-api/job-board/<name>` |
 | Greenhouse | `greenhouse-sources.json` | `https://boards-api.greenhouse.io/v1/boards/<name>/jobs` |
 | Lever | `lever-sources.json` | `https://api.lever.co/v0/postings/<name>?mode=json` (or `api.eu.lever.co` for EU-hosted companies) |
+| SmartRecruiters | `smartrecruiters-sources.json` | `https://api.smartrecruiters.com/v1/companies/<name>/postings?limit=1`: `totalFound` must be above 0, because a wrong name also answers with 0 jobs rather than an error. The name is case-sensitive (`Wise`, `BoschGroup`) |
 
 Every platform uses the same entry format:
 
@@ -126,6 +130,7 @@ Every platform uses the same entry format:
 | `country_hints` | no | location text → ISO country code for this company only, added to (and overriding) the shared hints |
 | `state_codes` | no | `true` to read "City, ST" and "Remote - ST" as a US state or Canadian province when nothing else matched; for North American boards only |
 | `region` | Lever only | `"eu"` for companies on Lever's EU instance; defaults to `"global"` |
+| `max_pages` | SmartRecruiters only | most list pages (100 jobs each) fetched per board; overrides the catalog's top-level `max_pages` (default 100) |
 
 Then:
 
@@ -133,11 +138,24 @@ Then:
 2. Run `python scripts/missing_countries.py <name>` and fix what it lists (see "Country matching" below), then refresh again.
 3. Optionally add a logo at `frontend/public/logos/<name>.png` (or `.jpg`), ideally with a transparent background. Without one, the card shows the company's initials.
 
-The order of entries in a catalog is the order "Fetch all jobs" takes them. The catalogs are checked when they load: a missing or unknown key, a duplicate `name`, or a bad URL or country code stops with a `ConfigError` naming the file and entry, so a typo never silently drops a company.
+The order of entries in a catalog is the order "Fetch all jobs" takes them. The catalogs are checked when they load: a missing or unknown key, a duplicate `name`, or a bad URL, number or country code stops with a `ConfigError` naming the file and entry, so a typo never silently drops a company.
+
+### Platform notes
+
+- **Greenhouse:** two small requests per board (jobs, then departments for team names). Descriptions are fetched only when a job's details are opened. The only platform with an updated date.
+- **Ashby:** one request per board, which includes descriptions; details re-read the board.
+- **Lever:** one request per board; details come from the single-posting endpoint.
+- **SmartRecruiters:**
+  - **Fetching:** only the list endpoint is used, one request per 100 jobs, up to `max_pages` per board. No filters are sent.
+  - **English only:** only English postings (and those without a language) are kept.
+  - **Countries** come from each posting's country code.
+  - **Work mode** is remote, hybrid, or otherwise on-site.
+  - **No details request:** opening details makes no request, since each job links to its posting page.
+  - **A sudden drop to zero is refused:** if a refresh finds 0 jobs for a company that previously had some, the refresh fails and the saved jobs are kept.
 
 ## Country matching
 
-Job board APIs mostly give locations as free text ("Dublin", "SF, NYC", "Remote - TX"), so each job's `countries` are worked out at refresh time by `CountryFinder` in `core/countries.py` (Lever also gives a country code, which is used directly). For each location it collects matches from, in order:
+Job board APIs mostly give locations as free text ("Dublin", "SF, NYC", "Remote - TX"), so each job's `countries` are worked out at refresh time by `CountryFinder` in `core/countries.py`. Lever and SmartRecruiters also give a country code, which is used directly. For each location it collects matches from, in order:
 
 1. **Built-in names:** country names, US state names and Canadian province names, in any case.
 2. **Abbreviations:** US, U.S., USA, UK, U.K. and UAE, in capitals only.
@@ -164,9 +182,9 @@ Codes are always two-letter ISO codes (`AE`, not `UAE`; `GB`, not `UK`).
 
 A platform needs three pieces:
 
-1. **A strategy** in `sources/strategies/<platform>.py`: a `JobSource` subclass that sets `strategy = "<platform>"`, declares its settings as class attributes, and implements `fetch_jobs()` and `fetch_job_details(job)` against the platform's public API. Export it from `sources/strategies/__init__.py`.
+1. **A strategy** in `sources/strategies/<platform>.py`: a `JobSource` subclass that sets `strategy = "<platform>"`, declares its settings as class attributes, and implements `fetch_jobs()` and `fetch_job_details(job)` against the platform's public API. It can also override `check_refresh(jobs, previous)`, which is called before saving and may refuse the save (see SmartRecruiters). Export it from `sources/strategies/__init__.py`.
 2. **A catalog** in `sources/catalogs/<platform>-sources.json`: the API base URLs once at the top, plus a `sources` list using the entry format above.
-3. **A loader** in `sources/loaders/<platform>_loader.py`: a `load()` function that validates the catalog with the helpers in `_catalog.py` (including `read_country_hints()` and `get_token_list()`), builds one subclass per entry with `make_source_class()`, and registers them all. Add it to `LOADERS` in `sources/loaders/__init__.py`, and the platform's strategy name to `JOBSENTRY_REFRESH_ORDER`.
+3. **A loader** in `sources/loaders/<platform>_loader.py`: a `load()` function that validates the catalog with the helpers in `_catalog.py` (including `read_country_hints()`, `get_token_list()` and `get_int()`), builds one subclass per entry with `make_source_class()`, and registers them all. Add it to `LOADERS` in `sources/loaders/__init__.py`, and the platform's strategy name to `JOBSENTRY_REFRESH_ORDER` (and `DEFAULT_REFRESH_ORDER` in `config.py`).
 
 Rules for strategies:
 - **IDs** are always strings.
@@ -236,7 +254,7 @@ GET /api/v1/jobs?posted_on=2026-11-01&tz=Asia/Kolkata&country=US&q=engineer
 | 409 | `refresh_in_progress` | that source (or every source) is already being fetched |
 | 422 | `invalid_request` | bad parameter, e.g. an unknown time zone (with a `details` list) |
 | 502 | `source_blocked` | the job board refused automated access; not retried or worked around |
-| 502 | `source_error` | the job board failed or its response changed |
+| 502 | `source_error` | the job board failed, its response changed, or a refresh was refused (e.g. a sudden drop to zero jobs) |
 | 500 | `config_error`, `internal_error` | problem on our side, e.g. an invalid catalog |
 
 **Adding endpoints.** Put the logic in a service first (so the CLI can use it too), add response models to `schemas.py`, then add a route in `api/routes/`. A new group of endpoints is a new module with a `router`, added to `ROUTERS` in `api/routes/__init__.py`. New exception types get a status in `ERROR_MAP` in `api/errors.py`.
@@ -258,7 +276,7 @@ cp .env.example .env      # run from backend/
 | `JOBSENTRY_HTTP_RETRIES` | `3` | retries on 429/5xx and connection errors |
 | `JOBSENTRY_USER_AGENT` | browser string | User-Agent sent with requests |
 | `JOBSENTRY_REFRESH_WORKERS` | `5` | how many sources "Fetch all jobs" fetches at the same time (1–32) |
-| `JOBSENTRY_REFRESH_ORDER` | `ashby,greenhouse,lever` | platforms in the order "Fetch all jobs" works through them |
+| `JOBSENTRY_REFRESH_ORDER` | `ashby,greenhouse,lever,smartrecruiters` | platforms in the order "Fetch all jobs" works through them |
 | `JOBSENTRY_TIMEZONE` | this computer's | IANA time zone for "today" in `todays-jobs.json`, e.g. `Asia/Kolkata` (set it on Windows) |
 | `JOBSENTRY_API_HOST` | `127.0.0.1` | API address; the default is reachable from this computer only |
 | `JOBSENTRY_API_PORT` | `8000` | API port |
@@ -308,4 +326,4 @@ data/
 - **`extra.board_name`** records which board a job came from.
 - **Files saved by older versions still load:** unknown fields are ignored and missing ones get defaults.
 
-`data/<source>/jobs/<id>.json` holds every `Job` field plus `description`, `description_format` (`html` for every current platform) and `apply_url`.
+`data/<source>/jobs/<id>.json` holds every `Job` field plus `description`, `description_format` and `apply_url`. Descriptions are HTML for Greenhouse, Ashby and Lever. For SmartRecruiters, details make no request, so the description is empty and `apply_url` is the posting page.

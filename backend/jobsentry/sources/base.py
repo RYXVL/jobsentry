@@ -1,6 +1,6 @@
 """The contract every source implements.
 
-A source knows how to read one company's career site and return data in the
+A source knows how to read one company's job board and return data in the
 shared models from core.models. It does not save anything; that is the
 storage layer's job.
 """
@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 from ..core.http import HttpClient
-from ..core.models import Job, JobDetails
+from ..core.models import Job, JobDetails, JobSnapshot
 
 @dataclass(frozen=True)
 class SourceInfo:
@@ -47,3 +47,9 @@ class JobSource(ABC):
     @abstractmethod
     def fetch_job_details(self, job: Job) -> JobDetails:
         """Return full details for a job previously returned by fetch_jobs()."""
+
+    def check_refresh(self, jobs: list[Job], previous: JobSnapshot | None) -> None:
+        """Optional: called with freshly fetched `jobs` and the previously
+        saved snapshot (None if never saved), just before saving. Raise
+        SourceError to refuse the save and keep the saved jobs. Does nothing
+        by default; a strategy overrides it when its platform needs a guard."""
