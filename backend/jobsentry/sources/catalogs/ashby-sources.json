@@ -251,6 +251,36 @@
       "company": "Kaluza",
       "board_name": "kaluza",
       "homepage": "https://kaluza.com/careers"
+    },
+    {
+      "name": "nexcade",
+      "company": "Nexcade",
+      "board_name": "nexcade",
+      "homepage": "https://nexcade.ai/careers/"
+    },
+    {
+      "name": "pramaana-labs",
+      "company": "Pramaana Labs",
+      "board_name": "pramaana-labs",
+      "homepage": "https://jobs.ashbyhq.com/pramaana-labs"
+    },
+    {
+      "name": "aries",
+      "company": "Aries",
+      "board_name": "ariesglobal",
+      "homepage": "https://www.aries.global/careers"
+    },
+    {
+      "name": "circuithub",
+      "company": "CircuitHub",
+      "board_name": "circuithub",
+      "homepage": "https://circuithub.com/careers"
+    },
+    {
+      "name": "intellistack",
+      "company": "Intellistack",
+      "board_name": "intellistack",
+      "homepage": "https://intellistack.com/careers"
     }
   ]
 }

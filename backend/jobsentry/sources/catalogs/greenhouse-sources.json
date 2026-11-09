@@ -279,6 +279,15 @@
       "board_name": "thenewyorktimes",
       "homepage": "https://www.nytco.com/careers/",
       "state_codes": true
+    },
+    {
+      "name": "digitalocean",
+      "company": "DigitalOcean",
+      "board_name": "digitalocean98",
+      "homepage": "https://digitalocean.com/careers",
+      "country_hints": {
+        "Richmond": "US"
+      }
     }
   ]
 }
