@@ -13,7 +13,7 @@ export function CommandCenterPage() {
   const status = monitor.data;
 
   const monitorNote = !status
-    ? ""
+    ? "Scheduled fetching and alerts"
     : !status.active
       ? "Off"
       : status.fetching
@@ -30,16 +30,16 @@ export function CommandCenterPage() {
 
       <nav aria-label="Command center" className={styles.tiles}>
         <div className={styles.tile}>
-          <ButtonLink to="/sources" size="large">Sources</ButtonLink>
+          <ButtonLink to="/sources" size="large" className={styles.button}>Sources</ButtonLink>
           <p className={styles.note}>Every company, and fetching all their jobs</p>
         </div>
         <div className={styles.tile}>
-          <ButtonLink to="/manage" size="large">Manage sources</ButtonLink>
+          <ButtonLink to="/manage" size="large" className={styles.button}>Manage sources</ButtonLink>
           <p className={styles.note}>Add, edit or delete companies</p>
         </div>
         <div className={styles.tile}>
-          <ButtonLink to="/monitor" size="large">Monitor</ButtonLink>
-          <p className={styles.note}>{monitorNote || "Scheduled fetching and alerts"}</p>
+          <ButtonLink to="/monitor" size="large" className={styles.button}>Monitor</ButtonLink>
+          <p className={styles.note}>{monitorNote}</p>
         </div>
       </nav>
     </>
