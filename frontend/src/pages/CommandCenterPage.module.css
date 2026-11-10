@@ -1,0 +1,18 @@
+/* Three buttons side by side, each with a short line under it; they stack
+   on narrow screens. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-4);
+}
+
+.tile {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.note {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}

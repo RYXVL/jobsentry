@@ -29,6 +29,8 @@ from ..core.exceptions import (
     SourceNotFoundError,
 )
 from ..services.catalog_editor import CatalogEditsDisabledError, CatalogEntryError
+from ..services.email_sender import EmailError
+from ..services.monitor import MonitorSettingsError
 
 log = logging.getLogger(__name__)
 
@@ -40,6 +42,8 @@ ERROR_MAP: dict[type[JobsentryError], tuple[int, str]] = {
     RefreshInProgressError: (409, "refresh_in_progress"),
     CatalogEntryError: (422, "invalid_entry"),             # a bad entry from the website
     CatalogEditsDisabledError: (403, "catalog_edits_disabled"),
+    MonitorSettingsError: (422, "invalid_monitor_settings"),
+    EmailError: (502, "email_error"),              # the mail server failed or refused
     SourceBlockedError: (502, "source_blocked"),   # the career site refused us
     SourceError: (502, "source_error"),            # the career site failed or changed
     ConfigError: (500, "config_error"),

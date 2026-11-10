@@ -51,7 +51,7 @@ def start_refresh_all(settings: Settings = Depends(get_settings)) -> RefreshRunO
     (JOBSENTRY_REFRESH_WORKERS), in platform order (JOBSENTRY_REFRESH_ORDER).
     Returns at once with the run's progress; follow it with GET
     /sources/refresh. If a run is already going, returns that run."""
-    return _run_out(runner.start(settings))
+    return _run_out(runner.start(settings, trigger="manual"))
 
 @router.get("/refresh", response_model=RefreshRunOut,
             summary="Progress of fetching every source")
@@ -98,6 +98,7 @@ def _run_out(run: RefreshRun | None) -> RefreshRunOut:
         ))
     return RefreshRunOut(
         state="running" if run.running else "done",
+        trigger=run.trigger if run.trigger in ("manual", "monitor") else None,
         started_at=run.started_at,
         finished_at=run.finished_at,
         total=run.total,

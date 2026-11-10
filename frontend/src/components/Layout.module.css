@@ -5,7 +5,13 @@
   padding-block: var(--space-4);
 }
 
+/* The site name on the left, the monitor note (when on) on the right. */
 .header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
   margin-bottom: clamp(var(--space-5), 8vw, var(--space-6));
 }
 
@@ -13,4 +19,15 @@
   font-size: var(--text-lg);
   letter-spacing: -0.01em;
   text-decoration: none;
+}
+
+.monitoring {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.monitoring:hover {
+  color: var(--ink);
+  text-decoration: underline;
 }

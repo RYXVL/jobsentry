@@ -15,7 +15,13 @@ import { useEffect, useRef } from "react";
 
 import { bumpLogoVersion } from "../utils/logoVersion";
 import { api } from "./endpoints";
-import type { AllJobsParams, CatalogEntryInput, CheckInput, JobListParams } from "./types";
+import type {
+  AllJobsParams,
+  CatalogEntryInput,
+  CheckInput,
+  JobListParams,
+  MonitorSettings,
+} from "./types";
 
 /** How often to check a running fetch-all's progress. */
 const REFRESH_POLL_MS = 1000;
@@ -32,6 +38,8 @@ export const queryKeys = {
   refreshRun: ["refresh-run"] as const,
   catalog: ["catalog"] as const,
   catalogEntry: (name: string) => ["catalog", name] as const,
+  // Kept up to date every 15 seconds by AlertListener.
+  monitor: ["monitor"] as const,
 };
 
 export function useSources() {
@@ -201,4 +209,46 @@ export function useDeleteSource() {
       ]);
     },
   });
+}
+
+// Monitor --------------------------------------------------------------------
+
+/** The monitor's settings and status (also refreshed by AlertListener). */
+export function useMonitor() {
+  return useQuery({ queryKey: queryKeys.monitor, queryFn: api.getMonitor });
+}
+
+/** A monitor action whose response is the new status, stored straight away. */
+function useMonitorMutation<TArgs>(action: (args: TArgs) => ReturnType<typeof api.getMonitor>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: action,
+    onSuccess: (status) => queryClient.setQueryData(queryKeys.monitor, status),
+  });
+}
+
+export function useSaveMonitorSettings() {
+  return useMonitorMutation((settings: MonitorSettings) => api.saveMonitorSettings(settings));
+}
+
+/** Save the settings, then start monitoring. */
+export function useStartMonitor() {
+  return useMonitorMutation(async (settings: MonitorSettings) => {
+    await api.saveMonitorSettings(settings);
+    return api.startMonitor();
+  });
+}
+
+export function useStopMonitor() {
+  return useMonitorMutation((_: void) => api.stopMonitor());
+}
+
+export function useSendTestEmail() {
+  return useMutation({ mutationFn: (emailTo: string) => api.sendTestEmail(emailTo) });
+}
+
+export function useConfirmEmail() {
+  return useMonitorMutation(({ emailTo, received }: { emailTo: string; received: boolean }) =>
+    api.confirmEmail(emailTo, received),
+  );
 }

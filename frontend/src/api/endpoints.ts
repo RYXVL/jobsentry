@@ -16,6 +16,9 @@ import type {
   JobFacets,
   JobListParams,
   JobPage,
+  MonitorPoll,
+  MonitorSettings,
+  MonitorStatus,
   RefreshResult,
   RefreshRun,
   Source,
@@ -81,4 +84,25 @@ export const api = {
 
   deleteLogo: (name: string) =>
     request<{ name: string }>(`${catalogPath(name)}/logo`, { method: "DELETE" }),
+
+  // Monitor
+
+  getMonitor: () => request<MonitorStatus>("/monitor"),
+
+  saveMonitorSettings: (settings: MonitorSettings) =>
+    request<MonitorStatus>("/monitor/settings", json("PUT", settings)),
+
+  startMonitor: () => request<MonitorStatus>("/monitor/start", { method: "POST" }),
+
+  stopMonitor: () => request<MonitorStatus>("/monitor/stop", { method: "POST" }),
+
+  /** Called every 15 seconds by AlertListener; also tells the backend a tab is open. */
+  pollMonitor: (after: number | null) =>
+    request<MonitorPoll>(`/monitor/poll${toQueryString({ after: after ?? undefined })}`),
+
+  sendTestEmail: (emailTo: string) =>
+    request<{ message: string }>("/monitor/test-email", json("POST", { email_to: emailTo })),
+
+  confirmEmail: (emailTo: string, received: boolean) =>
+    request<MonitorStatus>("/monitor/confirm-email", json("POST", { email_to: emailTo, received })),
 };

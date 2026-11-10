@@ -7,10 +7,10 @@ import { ButtonLink } from "./Button";
 import styles from "./TodayCallout.module.css";
 
 /**
- * The command center on the sources page: how many jobs were posted today
- * across every company, and the way into /today. The count comes from saved
- * data in one quick request (limit 1, only `total` is used), so it never
- * contacts a job board. "Today" is the viewer's local date.
+ * The Today's jobs tile at the top of the command center: how many jobs
+ * were posted today across every company, and the way into /today. The
+ * count comes from saved data in one quick request (limit 1, only `total` is
+ * used), so it never contacts a job board. "Today" is the viewer's local date.
  */
 export function TodayCallout() {
   const headingId = useId();

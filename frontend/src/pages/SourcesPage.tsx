@@ -1,26 +1,26 @@
-import { useCatalog, useClearAll, useRefreshRun, useSources, useStartRefreshAll } from "../api/queries";
-import { Button, ButtonLink } from "../components/Button";
+import { useClearAll, useRefreshRun, useSources, useStartRefreshAll } from "../api/queries";
+import { Button } from "../components/Button";
 import { PageHeader } from "../components/PageHeader";
 import { RefreshProgress } from "../components/RefreshProgress";
 import { SourceList } from "../components/SourceList";
 import { ErrorNotice, StatusMessage } from "../components/StatusMessage";
-import { TodayCallout } from "../components/TodayCallout";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import styles from "./SourcesPage.module.css";
 
 const CONFIRM_CLEAR = "Delete all saved jobs for every company? This can't be undone.";
+const MONITOR_FETCHING =
+  "The monitor is fetching every company right now. This is available again when it finishes.";
 
-/** /sources: every company Job Sentry can read, with today's jobs on top
- *  and the progress of "Fetch all jobs" under the buttons. */
+/** /sources: every company Job Sentry reads, with "Fetch all jobs" and its progress. */
 export function SourcesPage() {
   useDocumentTitle("Sources");
   const sources = useSources();
-  const catalog = useCatalog();
   const run = useRefreshRun();
   const startRefresh = useStartRefreshAll();
   const clearAll = useClearAll();
 
   const fetching = startRefresh.isPending || run.data?.state === "running";
+  const monitorFetching = run.data?.state === "running" && run.data.trigger === "monitor";
   const busy = fetching || clearAll.isPending;
 
   const fetchAll = () => {
@@ -36,19 +36,23 @@ export function SourcesPage() {
 
   const actions = (
     <div className={styles.actions}>
-      <Button busy={fetching} disabled={busy} onClick={fetchAll}>
-        {fetching ? "Fetching…" : "Fetch all jobs"}
-      </Button>
+      {/* The wrapper carries the hover text, since some browsers don't show
+          it on a disabled button itself. */}
+      <span title={monitorFetching ? MONITOR_FETCHING : undefined}>
+        <Button busy={fetching} disabled={busy} onClick={fetchAll}>
+          {monitorFetching ? "Monitor fetching…" : fetching ? "Fetching…" : "Fetch all jobs"}
+        </Button>
+      </span>
       <Button busy={clearAll.isPending} disabled={busy} onClick={clear}>
         {clearAll.isPending ? "Clearing…" : "Clear saved jobs"}
       </Button>
-      {catalog.data?.edits_allowed && <ButtonLink to="/manage">Manage sources</ButtonLink>}
     </div>
   );
 
   return (
     <>
       <PageHeader
+        back={{ to: "/command-center", label: "Command center" }}
         title="Sources"
         intro="Choose a company to see its open jobs."
         actions={sources.isSuccess ? actions : undefined}
@@ -67,12 +71,9 @@ export function SourcesPage() {
       ) : sources.isError ? (
         <ErrorNotice error={sources.error} onRetry={() => sources.refetch()} />
       ) : sources.data.length === 0 ? (
-        <StatusMessage>No sources yet. Use “Manage sources” to add one.</StatusMessage>
+        <StatusMessage>No sources yet. Use Manage sources in the command center to add one.</StatusMessage>
       ) : (
-        <>
-          <TodayCallout />
-          <SourceList sources={sources.data} />
-        </>
+        <SourceList sources={sources.data} />
       )}
     </>
   );
