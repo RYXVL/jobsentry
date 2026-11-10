@@ -10,8 +10,10 @@ import { Route, Routes } from "react-router-dom";
 import FeralGradient from "./components/FeralGradient";
 import { Layout } from "./components/Layout";
 import { HomePage } from "./pages/HomePage";
+import { ManageSourcesPage } from "./pages/ManageSourcesPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
+import { SourceFormPage } from "./pages/SourceFormPage";
 import { SourceJobsPage } from "./pages/SourceJobsPage";
 import { SourcesPage } from "./pages/SourcesPage";
 import { TermsPage } from "./pages/TermsPage";
@@ -43,6 +45,9 @@ export function App() {
           <Route path="/sources" element={<SourcesPage />} />
           <Route path="/sources/:source" element={<SourceJobsPage />} />
           <Route path="/today" element={<TodayJobsPage />} />
+          <Route path="/manage" element={<ManageSourcesPage />} />
+          <Route path="/manage/new" element={<SourceFormPage />} />
+          <Route path="/manage/:name" element={<SourceFormPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="*" element={<NotFoundPage />} />

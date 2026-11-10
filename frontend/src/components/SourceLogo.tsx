@@ -1,11 +1,12 @@
 import { useState } from "react";
 
+import { getLogoVersion } from "../utils/logoVersion";
 import styles from "./SourceLogo.module.css";
 
 /**
  * Image types tried in order. Logos live in frontend/public/logos/ and are
  * named after the source's `name` (not its company name), e.g. stripe.png.
- * To support another format, add its extension here.
+ * Logos uploaded from "Manage sources" are saved there as <name>.png.
  */
 const LOGO_EXTENSIONS = ["png", "jpg"] as const;
 
@@ -14,21 +15,23 @@ interface SourceLogoProps {
   name: string;
   /** The company's display name; used for the initials fallback. */
   company: string;
-  /** "regular": a rounded square, as on source cards. "small": a round
-   *  badge, e.g. inside the company chip on job cards. */
+  /** "regular": as on source cards. "small": e.g. inside the company chip on job cards. */
   size?: "regular" | "small";
 }
 
 /**
  * A company's logo from frontend/public/logos/, or its initials when no
  * image is found. Each extension is tried in turn; when the last one fails
- * to load, the initials are shown instead.
+ * to load, the initials are shown instead. After a logo changes (see
+ * utils/logoVersion.ts), it starts over and asks for the new file.
  *
  * Decorative only: the company name is always shown next to it, so the
  * image has empty alt text and the initials are hidden from screen readers.
  */
 export function SourceLogo({ name, company, size = "regular" }: SourceLogoProps) {
-  const [attempt, setAttempt] = useState(0);
+  const version = getLogoVersion();
+  const [state, setState] = useState({ version, attempt: 0 });
+  const attempt = state.version === version ? state.attempt : 0;
   const extension = LOGO_EXTENSIONS[attempt];
   const sizeClass = size === "small" ? styles.small : "";
 
@@ -40,14 +43,15 @@ export function SourceLogo({ name, company, size = "regular" }: SourceLogoProps)
     );
   }
 
+  const cacheBuster = version > 0 ? `?v=${version}` : "";
   return (
     <img
-      key={extension}
+      key={`${extension}-${version}`}
       className={`${styles.logo} ${sizeClass}`}
-      src={`${import.meta.env.BASE_URL}logos/${encodeURIComponent(name)}.${extension}`}
+      src={`${import.meta.env.BASE_URL}logos/${encodeURIComponent(name)}.${extension}${cacheBuster}`}
       alt=""
       decoding="async"
-      onError={() => setAttempt((current) => current + 1)}
+      onError={() => setState({ version, attempt: attempt + 1 })}
     />
   );
 }

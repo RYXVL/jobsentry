@@ -150,3 +150,62 @@ export interface ApiErrorBody {
     details?: unknown[];
   };
 }
+
+// Managing sources (/catalog) ------------------------------------------------
+
+/** A platform sources can be added for. */
+export interface Platform {
+  key: string;
+  label: string;
+  /** True for Lever: global or EU instance. */
+  has_region: boolean;
+}
+
+/** GET /catalog. */
+export interface CatalogInfo {
+  /** JOBSENTRY_ALLOW_CATALOG_EDITS. */
+  edits_allowed: boolean;
+  platforms: Platform[];
+}
+
+export type LeverRegion = "global" | "eu";
+
+/** A source's catalog entry, as the form edits it. */
+export interface CatalogEntry {
+  platform: string;
+  name: string;
+  company: string;
+  board_names: string[];
+  homepage: string | null;
+  region: LeverRegion | null;
+  /** Keys the form doesn't edit, kept as they are (e.g. country_hints). */
+  extra_keys: string[];
+}
+
+/** What the form sends to add or edit a source. */
+export type CatalogEntryInput = Omit<CatalogEntry, "extra_keys">;
+
+/** POST /catalog/check body. */
+export interface CheckInput {
+  platform: string;
+  board_names: string[];
+  region: LeverRegion | null;
+}
+
+/** The result of checking one board name. */
+export interface BoardCheckResult {
+  board_name: string;
+  ok: boolean;
+  status: number | null;
+  job_count: number | null;
+  message: string;
+  /** The request that was made. */
+  url: string;
+}
+
+/** POST /catalog/check. */
+export interface CheckResult {
+  /** True when every board passed. */
+  ok: boolean;
+  boards: BoardCheckResult[];
+}

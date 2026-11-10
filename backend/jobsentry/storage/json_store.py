@@ -59,6 +59,21 @@ class JsonJobStore(JobStore):
     def load_today(self) -> dict[str, Any] | None:
         return self._read(self.today_path())
 
+    def delete_source(self, source: str) -> bool:
+        """Delete only the files this store writes for `source` (jobs.json
+        and jobs/*.json); its folder is removed once it's empty."""
+        source_dir = self.data_dir / source
+        if not source_dir.is_dir():
+            return False
+        self.snapshot_path(source).unlink(missing_ok=True)
+        details_dir = source_dir / "jobs"
+        if details_dir.is_dir():
+            for details_file in details_dir.glob("*.json"):
+                details_file.unlink()
+            self._remove_if_empty(details_dir)
+        self._remove_if_empty(source_dir)
+        return True
+
     def clear(self) -> int:
         """Delete only the files this store writes (jobs.json, jobs/*.json and
         todays-jobs.json). Anything else in data_dir is left alone, and a

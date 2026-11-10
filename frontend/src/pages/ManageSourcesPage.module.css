@@ -1,0 +1,44 @@
+.notice {
+  margin-bottom: var(--space-4);
+}
+
+.list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* One glass row per source: logo, name and platform, then the buttons. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--glass-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+
+.info {
+  display: grid;
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.company {
+  font-size: var(--text-lg);
+  overflow-wrap: anywhere;
+}
+
+.detail {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+}

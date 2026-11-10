@@ -1,5 +1,5 @@
-import { useClearAll, useRefreshRun, useSources, useStartRefreshAll } from "../api/queries";
-import { Button } from "../components/Button";
+import { useCatalog, useClearAll, useRefreshRun, useSources, useStartRefreshAll } from "../api/queries";
+import { Button, ButtonLink } from "../components/Button";
 import { PageHeader } from "../components/PageHeader";
 import { RefreshProgress } from "../components/RefreshProgress";
 import { SourceList } from "../components/SourceList";
@@ -15,6 +15,7 @@ const CONFIRM_CLEAR = "Delete all saved jobs for every company? This can't be un
 export function SourcesPage() {
   useDocumentTitle("Sources");
   const sources = useSources();
+  const catalog = useCatalog();
   const run = useRefreshRun();
   const startRefresh = useStartRefreshAll();
   const clearAll = useClearAll();
@@ -41,6 +42,7 @@ export function SourcesPage() {
       <Button busy={clearAll.isPending} disabled={busy} onClick={clear}>
         {clearAll.isPending ? "Clearing…" : "Clear saved jobs"}
       </Button>
+      {catalog.data?.edits_allowed && <ButtonLink to="/manage">Manage sources</ButtonLink>}
     </div>
   );
 
@@ -49,7 +51,7 @@ export function SourcesPage() {
       <PageHeader
         title="Sources"
         intro="Choose a company to see its open jobs."
-        actions={sources.isSuccess && sources.data.length > 0 ? actions : undefined}
+        actions={sources.isSuccess ? actions : undefined}
       />
 
       {run.data && <RefreshProgress run={run.data} />}
@@ -65,10 +67,7 @@ export function SourcesPage() {
       ) : sources.isError ? (
         <ErrorNotice error={sources.error} onRetry={() => sources.refetch()} />
       ) : sources.data.length === 0 ? (
-        <StatusMessage>
-          No sources yet. Add one to{" "}
-          <code>backend/jobsentry/sources/catalogs/greenhouse-sources.json</code>.
-        </StatusMessage>
+        <StatusMessage>No sources yet. Use “Manage sources” to add one.</StatusMessage>
       ) : (
         <>
           <TodayCallout />

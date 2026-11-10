@@ -3,8 +3,8 @@
 Sources come from catalogs: JSON files in sources/catalogs/, one per job
 board platform, read by the loaders in sources/loaders/. Each catalog entry
 becomes a source class registered here, so adding a company means adding
-one catalog entry and nothing else. Catalogs are loaded once, the first time
-the registry is used.
+one catalog entry and nothing else. Catalogs are loaded the first time the
+registry is used, and again by reload() after a catalog is edited.
 """
 
 from __future__ import annotations
@@ -34,24 +34,35 @@ def register(cls: type[JobSource]) -> type[JobSource]:
     _REGISTRY[name] = cls
     return cls
 
-def _discover() -> None:
-    """Load every catalog, once. If loading fails (e.g. a bad catalog), the
-    registry is left empty so the next call reports the same error again
-    rather than a confusing duplicate-name error."""
+def _load_all_locked() -> None:
+    """(Re)load every catalog into an empty registry. Call with the lock
+    held. If loading fails, the registry is left empty and marked not
+    loaded, so the next use reports the same error again."""
     global _discovered
+    from .loaders import load_all
+
+    _REGISTRY.clear()
+    try:
+        load_all()
+    except Exception:
+        _REGISTRY.clear()
+        _discovered = False
+        raise
+    _discovered = True
+
+def _discover() -> None:
+    """Load every catalog, once."""
     if _discovered:
         return
     with _discover_lock:
-        if _discovered:
-            return
-        from .loaders import load_all
+        if not _discovered:
+            _load_all_locked()
 
-        try:
-            load_all()
-        except Exception:
-            _REGISTRY.clear()
-            raise
-        _discovered = True
+def reload() -> None:
+    """Load every catalog again, e.g. after one was edited from the API.
+    Sources already created keep working; new lookups see the new catalogs."""
+    with _discover_lock:
+        _load_all_locked()
 
 def get_source_class(name: str) -> type[JobSource]:
     _discover()

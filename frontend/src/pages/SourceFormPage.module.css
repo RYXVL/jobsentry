@@ -1,0 +1,42 @@
+.form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 32rem;
+}
+
+.hint {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.error {
+  color: var(--ribbon);
+  font-size: var(--text-sm);
+}
+
+/* Current or chosen logo, the file picker, and "Remove logo". */
+.logoRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.preview {
+  width: var(--logo-size);
+  height: var(--logo-size);
+  object-fit: contain;
+}
+
+.check {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.actions {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}

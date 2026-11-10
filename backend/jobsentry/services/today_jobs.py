@@ -51,6 +51,15 @@ def record(store: JobStore, snapshot: JobSnapshot, company: str, timezone: str) 
         data["updated_at"] = _now()
         store.save_today(data)
 
+def remove(store: JobStore, source: str) -> None:
+    """Drop `source`'s section, e.g. when the source is deleted."""
+    with _lock:
+        data = _load(store)
+        if isinstance(data, dict) and isinstance(data.get("sources"), dict) and source in data["sources"]:
+            del data["sources"][source]
+            data["updated_at"] = _now()
+            store.save_today(data)
+
 def read(store: JobStore, posted_on: date, timezone: str) -> dict[str, dict[str, Any]] | None:
     """The file's sections ({source name: {company, fetched_at, jobs}}) if
     it's for `posted_on` in `timezone`; otherwise None, so the caller reads

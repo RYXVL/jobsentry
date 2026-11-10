@@ -123,3 +123,58 @@ class RefreshRunOut(Schema):
 
 class ClearOut(Schema):
     cleared_sources: int = Field(description="How many sources had saved data")
+
+# Managing sources ---------------------------------------------------------
+
+class PlatformOut(Schema):
+    key: str = Field(examples=["greenhouse"])
+    label: str = Field(examples=["Greenhouse"])
+    has_region: bool = Field(description="True for Lever: global or EU instance")
+
+class CatalogOut(Schema):
+    edits_allowed: bool = Field(description="JOBSENTRY_ALLOW_CATALOG_EDITS")
+    platforms: list[PlatformOut]
+
+class CatalogEntryIn(Schema):
+    platform: str = Field(examples=["greenhouse"])
+    name: str = Field("", description="Ignored when editing: a name can't change")
+    company: str
+    board_names: list[str] = Field(min_length=1)
+    homepage: str | None = None
+    region: Literal["global", "eu"] | None = Field(None, description="Lever only")
+
+class CatalogEntryOut(Schema):
+    platform: str
+    name: str
+    company: str
+    board_names: list[str]
+    homepage: str | None
+    region: str | None
+    extra_keys: list[str] = Field(
+        description="Keys the form doesn't edit, kept as they are (e.g. country_hints)"
+    )
+
+class CheckIn(Schema):
+    platform: str
+    board_names: list[str] = Field(min_length=1)
+    region: Literal["global", "eu"] | None = None
+
+class BoardCheckOut(Schema):
+    board_name: str
+    ok: bool
+    status: int | None = Field(description="HTTP status, when known")
+    job_count: int | None
+    message: str
+    url: str = Field(description="The request that was made")
+
+class CheckOut(Schema):
+    ok: bool = Field(description="True when every board passed")
+    boards: list[BoardCheckOut]
+
+class DeletedOut(Schema):
+    name: str
+
+class LogoOut(Schema):
+    name: str
+    file: str | None = Field(description="The saved file's name, e.g. wise.png")
+    removed: bool = Field(description="On delete: whether a logo existed")

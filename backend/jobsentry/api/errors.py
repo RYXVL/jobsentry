@@ -28,6 +28,7 @@ from ..core.exceptions import (
     SourceError,
     SourceNotFoundError,
 )
+from ..services.catalog_editor import CatalogEditsDisabledError, CatalogEntryError
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +38,8 @@ ERROR_MAP: dict[type[JobsentryError], tuple[int, str]] = {
     SourceNotFoundError: (404, "source_not_found"),
     JobNotFoundError: (404, "job_not_found"),
     RefreshInProgressError: (409, "refresh_in_progress"),
+    CatalogEntryError: (422, "invalid_entry"),             # a bad entry from the website
+    CatalogEditsDisabledError: (403, "catalog_edits_disabled"),
     SourceBlockedError: (502, "source_blocked"),   # the career site refused us
     SourceError: (502, "source_error"),            # the career site failed or changed
     ConfigError: (500, "config_error"),

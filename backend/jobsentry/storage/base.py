@@ -33,6 +33,11 @@ class JobStore(ABC):
         """Return the saved today's-jobs index, or None if there isn't one."""
 
     @abstractmethod
+    def delete_source(self, source: str) -> bool:
+        """Delete one source's saved snapshot and job details. Return
+        whether it had saved data."""
+
+    @abstractmethod
     def clear(self) -> int:
         """Delete every saved snapshot, job detail and the today's-jobs index.
         Return how many sources had saved data."""

@@ -18,6 +18,11 @@ Fetch all jobs
                                (default: ashby,greenhouse,lever,smartrecruiters)
     JOBSENTRY_TIMEZONE         IANA time zone for "today" (default: this computer's)
 
+Managing sources from the website
+    JOBSENTRY_ALLOW_CATALOG_EDITS  allow adding/editing/deleting sources (default: true)
+    JOBSENTRY_LOGOS_DIR            where uploaded logos are saved
+                                   (default: ../frontend/public/logos)
+
 API
     JOBSENTRY_API_HOST      interface to bind (default: 127.0.0.1, this machine only)
     JOBSENTRY_API_PORT      port to listen on (default: 8000)
@@ -55,6 +60,9 @@ DEFAULT_REFRESH_ORDER = ("ashby", "greenhouse", "lever", "smartrecruiters")
 #: Upper bound on refresh workers, so a typo can't start hundreds of threads.
 MAX_REFRESH_WORKERS = 32
 
+#: Where the frontend serves company logos from, next to backend/.
+DEFAULT_LOGOS_DIR = (BACKEND_DIR.parent / "frontend" / "public" / "logos").resolve()
+
 def load_env_file(path: Path = ENV_FILE) -> None:
     """Load `path` into os.environ without overriding variables already set.
     A missing file is fine; defaults are used instead."""
@@ -77,6 +85,17 @@ def _get_number(
         raise ConfigError(f"{name} must be {bounds}, got {value}")
     return value
 
+def _get_bool(name: str, default: bool) -> bool:
+    """Read a true/false variable (true/false, yes/no, on/off, 1/0)."""
+    raw = (os.getenv(name) or "").strip().lower()
+    if not raw:
+        return default
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    if raw in ("0", "false", "no", "off"):
+        return False
+    raise ConfigError(f"{name} must be true or false, got '{raw}'")
+
 def _get_list(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
     """Read a comma-separated variable into a tuple of non-empty strings."""
     raw = os.getenv(name)
@@ -87,7 +106,7 @@ def _get_list(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
 def _resolve_path(value: str | Path) -> Path:
     """Make relative paths relative to backend/, not the current directory."""
     path = Path(value).expanduser()
-    return path if path.is_absolute() else BACKEND_DIR / path
+    return path if path.is_absolute() else (BACKEND_DIR / path).resolve()
 
 def _is_timezone(name: str) -> bool:
     try:
@@ -130,6 +149,8 @@ class Settings:
     refresh_workers: int = 5
     refresh_order: tuple[str, ...] = DEFAULT_REFRESH_ORDER
     timezone: str = "UTC"
+    allow_catalog_edits: bool = True
+    logos_dir: Path = DEFAULT_LOGOS_DIR
     api_host: str = "127.0.0.1"
     api_port: int = 8000
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
@@ -152,6 +173,8 @@ class Settings:
                 for platform in _get_list("JOBSENTRY_REFRESH_ORDER", d.refresh_order)
             ),
             timezone=_get_timezone("JOBSENTRY_TIMEZONE", system_timezone()),
+            allow_catalog_edits=_get_bool("JOBSENTRY_ALLOW_CATALOG_EDITS", d.allow_catalog_edits),
+            logos_dir=_resolve_path(os.getenv("JOBSENTRY_LOGOS_DIR") or d.logos_dir),
             api_host=(os.getenv("JOBSENTRY_API_HOST") or "").strip() or d.api_host,
             api_port=_get_number("JOBSENTRY_API_PORT", d.api_port, int, 1, 65535),
             cors_origins=_get_list("JOBSENTRY_CORS_ORIGINS", d.cors_origins),
