@@ -29,7 +29,7 @@ backend/
 │   │   └── exceptions.py        JobsentryError and subclasses
 │   ├── sources/                 where jobs come from
 │   │   ├── base.py              JobSource interface
-│   │   ├── registry.py          register(), create_source(), loads the catalogs
+│   │   ├── registry.py          register(), create_source(), loads (and reloads) the catalogs
 │   │   ├── catalogs/            JSON data, read by the loaders
 │   │   │   ├── ashby-sources.json             companies on Ashby
 │   │   │   ├── greenhouse-sources.json        companies on Greenhouse
@@ -55,14 +55,15 @@ backend/
 │   │   ├── job_service.py       JobService: the operations CLI and API both use
 │   │   ├── queries.py           JobQuery, JobPage, AllJobsPage, JobFacets, SourceStatus
 │   │   ├── refresh_runner.py    "Fetch all jobs": a background queue and thread pool
-│   │   └── today_jobs.py        data/todays-jobs.json, the fast path for /today
+│   │   ├── today_jobs.py        data/todays-jobs.json, the fast path for /today
+│   │   └── catalog_editor.py    add, edit, delete and check sources (and logos) from the website
 │   ├── api/                     FastAPI app for the frontend
 │   │   ├── __main__.py          `python -m jobsentry.api` (runs uvicorn)
 │   │   ├── app.py               create_app(): CORS, error handlers, routers, shutdown
 │   │   ├── dependencies.py      settings / HTTP client / JobService per request
 │   │   ├── errors.py            exceptions -> HTTP status + one JSON error shape
-│   │   ├── schemas.py           Pydantic response models (the public contract)
-│   │   └── routes/              health.py, sources.py, jobs.py, all_jobs.py
+│   │   ├── schemas.py           Pydantic request and response models (the public contract)
+│   │   └── routes/              health.py, sources.py, jobs.py, all_jobs.py, catalog.py
 │   └── cli/
 │       ├── main.py              builds the parser from COMMANDS
 │       ├── output.py            shared output formatting
@@ -79,7 +80,7 @@ backend/
 ```
 cli        api
   └────┬────┘
-   services (JobService, refresh_runner, today_jobs)
+   services (JobService, refresh_runner, today_jobs, catalog_editor)
         ├── sources  (catalog → loader → strategy → JobSource)  ── core.http
         └── storage  (JobStore → JsonJobStore)
                        all layers use core.models and core.exceptions
@@ -99,7 +100,21 @@ Job Sentry only reads data it's allowed to read. Before adding a company:
 
 ## Adding a company
 
-Companies are data, not code. Find the company's **board name**: the last part of its board URL (`jobs.ashbyhq.com/<name>`, `boards.greenhouse.io/<name>`, `jobs.lever.co/<name>`, `jobs.smartrecruiters.com/<name>`). Check that it works in a browser, then add an entry to that platform's catalog in `sources/catalogs/`.
+Companies are data, not code. Find the company's **board name**: the last part of its board URL (`jobs.ashbyhq.com/<name>`, `boards.greenhouse.io/<name>`, `jobs.lever.co/<name>`, `jobs.smartrecruiters.com/<name>`).
+
+### From the website (easiest)
+
+Open **Sources, then Manage sources, then Add source**:
+
+1. **Fill in the form:** the platform, company, name, board name(s), optional careers page, region (Lever only), and an optional PNG logo.
+2. **Press Check.** It requests each board once, exactly as a refresh would, and shows what came back.
+3. **Save.** This only becomes available once the check has passed for the current platform, board names and region.
+
+The entry is validated like a hand-edited one and written to the right catalog file, and it's available straight away, with no restart. The same page edits and deletes sources (see "Managing sources from the website" below).
+
+### By editing a catalog file
+
+Check the board in a browser, then add an entry to that platform's catalog in `sources/catalogs/`.
 
 | Platform | Catalog | Check this URL shows jobs |
 |---|---|---|
@@ -123,7 +138,7 @@ Every platform uses the same entry format:
 
 | Key | Required | Meaning |
 |---|---|---|
-| `name` | yes | lowercase letters, digits, `-` or `_`; used in URLs and as the `data/<name>/` folder. Must be unique across all catalogs |
+| `name` | yes | lowercase letters, digits, `-` or `_`; used in URLs, as the `data/<name>/` folder and as the logo's file name. Must be unique across all catalogs |
 | `company` | yes | display name |
 | `board_name` | yes | the board's name on the platform, or a list of names for a company with several boards (e.g. one per region), merged into one source |
 | `homepage` | no | careers page; defaults to the first board's page |
@@ -153,6 +168,20 @@ The order of entries in a catalog is the order "Fetch all jobs" takes them. The 
   - **No details request:** opening details makes no request, since each job links to its posting page.
   - **A sudden drop to zero is refused:** if a refresh finds 0 jobs for a company that previously had some, the refresh fails and the saved jobs are kept.
 
+## Managing sources from the website
+
+`services/catalog_editor.py` adds, edits and deletes catalog entries and logos for the website's **Manage sources** pages, through the `/catalog` endpoints (see "API" below).
+
+- **Validated like startup.** Every change is checked by the same loader code that runs at startup, before anything is written, so the same rules and messages apply. A name must also be unique across all catalogs.
+- **Atomic, and live at once.** Catalog files are written atomically and the registry reloads, so changes apply with no restart. If the reload fails, the previous files are restored.
+- **Hand-edited keys are kept.** Editing changes only the form's fields (`company`, `board_name`, `homepage`, `region`); other keys such as `country_hints`, `state_codes` and `max_pages` are kept as they are. Moving a source to another platform moves it to that catalog and drops keys the new platform doesn't allow. A name can't change; to rename, delete and add again.
+- **Delete removes everything:** the catalog entry, `data/<name>/`, the source's part of `todays-jobs.json`, and its logo. It can't be undone.
+- **Logos** are PNGs of up to 2 MB, saved as `<JOBSENTRY_LOGOS_DIR>/<name>.png` (by default `frontend/public/logos/`), which is where the frontend looks for them. Uploading replaces any `.jpg` logo for the same name.
+- **Refused while fetching.** Changes are refused while "Fetch all jobs" is running or while that source is refreshing (409).
+- **Can be switched off.** Turning off `JOBSENTRY_ALLOW_CATALOG_EDITS` makes every change a 403 and hides "Manage sources" in the website.
+
+**Safety:** this lets the website write files on the computer running the API. That's fine with the default `JOBSENTRY_API_HOST=127.0.0.1`, where only that computer can reach the API. If you ever listen on another address (e.g. `0.0.0.0`), set `JOBSENTRY_ALLOW_CATALOG_EDITS=false`.
+
 ## Country matching
 
 Job board APIs mostly give locations as free text ("Dublin", "SF, NYC", "Remote - TX"), so each job's `countries` are worked out at refresh time by `CountryFinder` in `core/countries.py`. Lever and SmartRecruiters also give a country code, which is used directly. For each location it collects matches from, in order:
@@ -176,15 +205,16 @@ Where a fix goes:
 | many "City, ST" locations | `"state_codes": true` on that company |
 | regions and non-places ("Remote", "EMEA", "Europe") | leave them; no single country fits |
 
-Codes are always two-letter ISO codes (`AE`, not `UAE`; `GB`, not `UK`).
+Codes are always two-letter ISO codes (`AE`, not `UAE`; `GB`, not `UK`). `country_hints` and `state_codes` aren't on the website's form; edit them in the catalog file (the website keeps them when it saves).
 
 ## Adding a platform
 
-A platform needs three pieces:
+A platform needs three pieces, plus one line for the website:
 
 1. **A strategy** in `sources/strategies/<platform>.py`: a `JobSource` subclass that sets `strategy = "<platform>"`, declares its settings as class attributes, and implements `fetch_jobs()` and `fetch_job_details(job)` against the platform's public API. It can also override `check_refresh(jobs, previous)`, which is called before saving and may refuse the save (see SmartRecruiters). Export it from `sources/strategies/__init__.py`.
 2. **A catalog** in `sources/catalogs/<platform>-sources.json`: the API base URLs once at the top, plus a `sources` list using the entry format above.
 3. **A loader** in `sources/loaders/<platform>_loader.py`: a `load()` function that validates the catalog with the helpers in `_catalog.py` (including `read_country_hints()`, `get_token_list()` and `get_int()`), builds one subclass per entry with `make_source_class()`, and registers them all. Add it to `LOADERS` in `sources/loaders/__init__.py`, and the platform's strategy name to `JOBSENTRY_REFRESH_ORDER` (and `DEFAULT_REFRESH_ORDER` in `config.py`).
+4. **For the website:** add a `Platform` to `PLATFORMS` in `services/catalog_editor.py`. It names the loader, the request a check makes (the same one a refresh makes), and how to count jobs in the response.
 
 Rules for strategies:
 - **IDs** are always strings.
@@ -209,6 +239,8 @@ python -m jobsentry.api --reload   # restart automatically when code or catalogs
 
 Open **http://127.0.0.1:8000/docs** for interactive documentation where you can try every endpoint. All paths start with `/api/v1`.
 
+**Sources and jobs**
+
 | Method | Path | What it does | CLI equivalent |
 |---|---|---|---|
 | GET | `/health` | check the API is up | |
@@ -222,6 +254,19 @@ Open **http://127.0.0.1:8000/docs** for interactive documentation where you can 
 | GET | `/sources/{source}/jobs/facets` | teams, locations and countries with counts | |
 | GET | `/sources/{source}/jobs/{job_id}` | full details (saved copy, or fetched once) | `show <source> <id>` |
 | GET | `/jobs` | saved jobs across every source, e.g. today's jobs | |
+
+**Managing sources** (used by the website's Manage sources pages)
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/catalog` | the platforms, and whether editing is allowed (`edits_allowed`) |
+| GET | `/catalog/sources/{name}` | one source's entry, as the form edits it, plus the names of keys kept as they are |
+| POST | `/catalog/check` | `{platform, board_names, region?}`: request each board once, as a refresh would; returns `ok` and one result per board (status, job count, message) |
+| POST | `/catalog/sources` | add a source: `{platform, name, company, board_names, homepage?, region?}` |
+| PUT | `/catalog/sources/{name}` | edit a source (same body; `name` can't change, and other keys are kept) |
+| DELETE | `/catalog/sources/{name}` | delete a source, its saved jobs and its logo |
+| PUT | `/catalog/sources/{name}/logo` | upload a logo: the PNG file itself as the body, `Content-Type: image/png` |
+| DELETE | `/catalog/sources/{name}/logo` | remove a source's logo |
 
 Options for `/sources/{source}/jobs` and `/jobs`, all optional:
 
@@ -240,7 +285,7 @@ GET /api/v1/jobs?posted_on=2026-11-01&tz=Asia/Kolkata&country=US&q=engineer
 
 **Today's jobs.** Every save also updates that source's section of `data/todays-jobs.json`, which holds the jobs posted today in `JOBSENTRY_TIMEZONE`. When `/jobs` is asked for that date and time zone, it reads this one file instead of every `jobs.json`; otherwise it reads the saved jobs, so results are never stale.
 
-**Caching rules.** GET endpoints never fetch on their own, except the first time a source has no saved data. Only the refresh endpoints (or `?refresh=true` on a job's details) contact job boards, so browsing in the UI sends no traffic to companies. Two refreshes of the same source can't run at once, and clearing is refused while anything is being fetched; both get a 409.
+**Caching rules.** GET endpoints never fetch on their own, except the first time a source has no saved data. Only the refresh endpoints, `?refresh=true` on a job's details, and `/catalog/check` contact job boards, so browsing in the UI sends no traffic to companies. Two refreshes of the same source can't run at once, and clearing or changing sources is refused while anything is being fetched; both get a 409.
 
 **Errors** always have one shape, so the frontend can handle them in one place:
 
@@ -250,14 +295,16 @@ GET /api/v1/jobs?posted_on=2026-11-01&tz=Asia/Kolkata&country=US&q=engineer
 
 | Status | `code` | Meaning |
 |---|---|---|
+| 403 | `catalog_edits_disabled` | editing sources is turned off (`JOBSENTRY_ALLOW_CATALOG_EDITS=false`) |
 | 404 | `source_not_found`, `job_not_found`, `not_found` | unknown source, job, or URL |
 | 409 | `refresh_in_progress` | that source (or every source) is already being fetched |
 | 422 | `invalid_request` | bad parameter, e.g. an unknown time zone (with a `details` list) |
+| 422 | `invalid_entry` | a source from the website isn't valid (e.g. a duplicate name or a bad board name), or a logo isn't a PNG of up to 2 MB |
 | 502 | `source_blocked` | the job board refused automated access; not retried or worked around |
 | 502 | `source_error` | the job board failed, its response changed, or a refresh was refused (e.g. a sudden drop to zero jobs) |
 | 500 | `config_error`, `internal_error` | problem on our side, e.g. an invalid catalog |
 
-**Adding endpoints.** Put the logic in a service first (so the CLI can use it too), add response models to `schemas.py`, then add a route in `api/routes/`. A new group of endpoints is a new module with a `router`, added to `ROUTERS` in `api/routes/__init__.py`. New exception types get a status in `ERROR_MAP` in `api/errors.py`.
+**Adding endpoints.** Put the logic in a service first (so the CLI can use it too), add request and response models to `schemas.py`, then add a route in `api/routes/`. A new group of endpoints is a new module with a `router`, added to `ROUTERS` in `api/routes/__init__.py`. New exception types get a status in `ERROR_MAP` in `api/errors.py`.
 
 ## Configuration
 
@@ -278,6 +325,8 @@ cp .env.example .env      # run from backend/
 | `JOBSENTRY_REFRESH_WORKERS` | `5` | how many sources "Fetch all jobs" fetches at the same time (1–32) |
 | `JOBSENTRY_REFRESH_ORDER` | `ashby,greenhouse,lever,smartrecruiters` | platforms in the order "Fetch all jobs" works through them |
 | `JOBSENTRY_TIMEZONE` | this computer's | IANA time zone for "today" in `todays-jobs.json`, e.g. `Asia/Kolkata` (set it on Windows) |
+| `JOBSENTRY_ALLOW_CATALOG_EDITS` | `true` | allow adding, editing and deleting sources (and logos) from the website; turn off if the API listens beyond `127.0.0.1` |
+| `JOBSENTRY_LOGOS_DIR` | `../frontend/public/logos` | where uploaded logos are saved as `<name>.png`; relative paths are relative to `backend/` |
 | `JOBSENTRY_API_HOST` | `127.0.0.1` | API address; the default is reachable from this computer only |
 | `JOBSENTRY_API_PORT` | `8000` | API port |
 | `JOBSENTRY_CORS_ORIGINS` | local dev ports 5173, 3000 | comma-separated frontend URLs allowed to call the API |

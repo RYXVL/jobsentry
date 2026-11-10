@@ -288,6 +288,12 @@
       "country_hints": {
         "Richmond": "US"
       }
+    },
+    {
+      "name": "assemblyai",
+      "company": "AssemblyAI",
+      "board_name": "assemblyai",
+      "homepage": "https://www.assemblyai.com/careers"
     }
   ]
 }

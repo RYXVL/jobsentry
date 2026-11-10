@@ -281,6 +281,12 @@
       "company": "Intellistack",
       "board_name": "intellistack",
       "homepage": "https://intellistack.com/careers"
+    },
+    {
+      "name": "mercor",
+      "company": "Mercor",
+      "board_name": "mercor",
+      "homepage": "https://www.mercor.com/careers/"
     }
   ]
 }
