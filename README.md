@@ -1,5 +1,9 @@
 # Job Sentry
 
+<a href="https://buymeacoffee.com/ryansojan">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" height="45">
+</a>
+
 Find new jobs the moment companies post them. Job Sentry reads companies'
 public job boards (Ashby, Greenhouse, Lever and SmartRecruiters), keeps
 the listings on your computer, and shows them in a local web app: today's
