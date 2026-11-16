@@ -3,6 +3,7 @@ import { useId, useState, type FormEvent } from "react";
 import {
   useConfirmEmail,
   useMonitor,
+  useRefreshRun,
   useSaveMonitorSettings,
   useSendTestEmail,
   useStartMonitor,
@@ -13,6 +14,7 @@ import type { MonitorSettings, MonitorStatus, MonitorUnit } from "../api/types";
 import { Button } from "../components/Button";
 import fieldStyles from "../components/Field.module.css";
 import { PageHeader } from "../components/PageHeader";
+import { RefreshProgress } from "../components/RefreshProgress";
 import { ErrorNotice, StatusMessage } from "../components/StatusMessage";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { formatRelativeTime } from "../utils/format";
@@ -21,10 +23,12 @@ import styles from "./MonitorPage.module.css";
 const MINUTE_CHOICES = [15, 30, 45];
 const HOUR_CHOICES = Array.from({ length: 24 }, (_, index) => index + 1);
 
-/** /monitor: fetch every company on a schedule and alert about new jobs. */
+/** /monitor: fetch every company on a schedule and alert about new jobs,
+ *  with the current fetch's progress at the top, as on the sources page. */
 export function MonitorPage() {
   useDocumentTitle("Monitor");
   const monitor = useMonitor();
+  const run = useRefreshRun();
 
   return (
     <>
@@ -33,6 +37,7 @@ export function MonitorPage() {
         title="Monitor"
         intro="Fetch every company on a schedule, and get a sound or an email when new jobs are posted."
       />
+      {run.data && <RefreshProgress run={run.data} />}
       {monitor.isPending ? (
         <StatusMessage>Loading…</StatusMessage>
       ) : monitor.isError ? (

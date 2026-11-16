@@ -25,6 +25,8 @@ import type {
 
 /** How often to check a running fetch-all's progress. */
 const REFRESH_POLL_MS = 1000;
+/** After the monitor starts, wait this long for its first fetch to begin. */
+const MONITOR_START_DELAY_MS = 1000;
 
 export const queryKeys = {
   sources: ["sources"] as const,
@@ -92,9 +94,14 @@ export function useRefreshSource(source: string) {
 }
 
 /**
- * Progress of fetching every source. Polls while a run is going, and every
- * time another source finishes, refreshes everything shown about saved data
- * (source cards, counts, today's jobs), so new data appears as it arrives.
+ * Progress of fetching every source. Polls every second while a run is
+ * going, and every time another source finishes, refreshes everything shown
+ * about saved data (source cards, counts, today's jobs), so new data appears
+ * as it arrives.
+ *
+ * Runs started by the monitor happen in the background, so this also
+ * watches the monitor's status: when the monitor starts (a new started_at)
+ * or reports it's fetching, the run is reloaded, which starts the polling.
  */
 export function useRefreshRun() {
   const queryClient = useQueryClient();
@@ -103,7 +110,9 @@ export function useRefreshRun() {
     queryFn: api.getRefreshRun,
     refetchInterval: (query) => (query.state.data?.state === "running" ? REFRESH_POLL_MS : false),
   });
+  const monitor = useMonitor().data;
 
+  // Each finished source: refresh the saved data shown.
   const completed = run.data?.completed;
   const lastCompleted = useRef(completed);
   useEffect(() => {
@@ -113,6 +122,26 @@ export function useRefreshRun() {
     }
     lastCompleted.current = completed;
   }, [completed, queryClient]);
+
+  // The monitor just started: its first fetch begins a moment later.
+  const monitorStartedAt = monitor?.active ? monitor.started_at : null;
+  useEffect(() => {
+    if (!monitorStartedAt) return;
+    const timer = window.setTimeout(
+      () => queryClient.invalidateQueries({ queryKey: queryKeys.refreshRun }),
+      MONITOR_START_DELAY_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [monitorStartedAt, queryClient]);
+
+  // The monitor reports a fetch this page hasn't seen yet.
+  const monitorFetching = monitor?.fetching ?? false;
+  const runRunning = run.data?.state === "running";
+  useEffect(() => {
+    if (monitorFetching && !runRunning) {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.refreshRun });
+    }
+  }, [monitorFetching, runRunning, queryClient]);
 
   return run;
 }
