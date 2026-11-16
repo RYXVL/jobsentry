@@ -225,7 +225,6 @@ class MonitorEventOut(Schema):
     id: int
     at: str
     count: int
-    play_in_browser: bool = Field(description="An open tab plays the chime (else the computer did)")
     jobs: list[MonitorJobOut]
 
 class MonitorPollOut(Schema):

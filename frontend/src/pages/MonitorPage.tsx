@@ -7,6 +7,7 @@ import {
   useSendTestEmail,
   useStartMonitor,
   useStopMonitor,
+  useTestSound,
 } from "../api/queries";
 import type { MonitorSettings, MonitorStatus, MonitorUnit } from "../api/types";
 import { Button } from "../components/Button";
@@ -14,7 +15,6 @@ import fieldStyles from "../components/Field.module.css";
 import { PageHeader } from "../components/PageHeader";
 import { ErrorNotice, StatusMessage } from "../components/StatusMessage";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { playChime, unlockAudio } from "../utils/chime";
 import { formatRelativeTime } from "../utils/format";
 import styles from "./MonitorPage.module.css";
 
@@ -53,6 +53,7 @@ function MonitorForm({ status }: { status: MonitorStatus }) {
   const save = useSaveMonitorSettings();
   const start = useStartMonitor();
   const stop = useStopMonitor();
+  const testSound = useTestSound();
   const sendTest = useSendTestEmail();
   const confirm = useConfirmEmail();
 
@@ -181,10 +182,15 @@ function MonitorForm({ status }: { status: MonitorStatus }) {
             A sound
           </label>
           <div className={styles.row}>
-            <Button onClick={() => { unlockAudio(); playChime(); }}>Test sound</Button>
+            <Button busy={testSound.isPending} onClick={() => testSound.mutate()}>
+              Test sound
+            </Button>
           </div>
+          {testSound.data && <p className={styles.hint}>{testSound.data.message}</p>}
+          {testSound.isError && <ErrorNotice error={testSound.error} />}
           <p className={styles.hint}>
-            An open Job Sentry tab plays it; if none is open, this computer plays it.
+            This computer plays the chime the moment a fetch finds new jobs, whether or not
+            Job Sentry is open in a browser.
           </p>
 
           <label className={styles.check}>
@@ -215,7 +221,7 @@ function MonitorForm({ status }: { status: MonitorStatus }) {
                   placeholder="you@example.com"
                 />
               </div>
-              <p className={emailVerified ? styles.hint : styles.hint}>
+              <p className={styles.hint}>
                 {emailVerified
                   ? "Verified: test emails to this address arrive."
                   : "Verify this address before turning email on: send a test email and confirm you received it."}

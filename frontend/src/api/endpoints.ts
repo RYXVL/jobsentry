@@ -96,9 +96,12 @@ export const api = {
 
   stopMonitor: () => request<MonitorStatus>("/monitor/stop", { method: "POST" }),
 
-  /** Called every 15 seconds by AlertListener; also tells the backend a tab is open. */
+  /** Called every 15 seconds by AlertListener: status and new alerts, for the banner. */
   pollMonitor: (after: number | null) =>
     request<MonitorPoll>(`/monitor/poll${toQueryString({ after: after ?? undefined })}`),
+
+  /** Plays the chime on the computer running the backend, as alerts do. */
+  testSound: () => request<{ message: string }>("/monitor/test-sound", { method: "POST" }),
 
   sendTestEmail: (emailTo: string) =>
     request<{ message: string }>("/monitor/test-email", json("POST", { email_to: emailTo })),

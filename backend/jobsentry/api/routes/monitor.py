@@ -1,6 +1,6 @@
 """Endpoints for the monitor: its settings and status, starting and
-stopping it, the website's 15-second poll, and verifying email.
-The logic lives in services.monitor."""
+stopping it, the website's 15-second poll, testing the sound, and
+verifying email. The logic lives in services.monitor."""
 
 from __future__ import annotations
 
@@ -53,10 +53,18 @@ def poll(
     after: int | None = Query(None, ge=0, description="Return alerts with a higher ID"),
     settings: Settings = Depends(get_settings),
 ) -> MonitorPollOut:
-    """Every open tab calls this every 15 seconds. It tells the backend a
-    tab is open (so the tab plays the chime) and returns new alerts."""
+    """Every open tab calls this every 15 seconds for the monitor's status
+    and any new alerts (to show a banner). The chime doesn't wait for this:
+    the backend plays it as soon as a fetch finds new jobs."""
     status, events = monitor.poll(settings, after)
     return MonitorPollOut(monitor=_out(status), events=[MonitorEventOut(**event) for event in events])
+
+@router.post("/test-sound", response_model=MessageOut, summary="Play the alert chime now")
+def test_sound() -> MessageOut:
+    """Plays the chime on the computer running the API, exactly as an alert does."""
+    if monitor.test_sound():
+        return MessageOut(message="Playing the chime on this computer.")
+    return MessageOut(message="No audio player was found on this computer, so alerts can't play a sound.")
 
 @router.post("/test-email", response_model=MessageOut, responses=ERRORS, summary="Send a test email")
 def test_email(body: TestEmailIn, settings: Settings = Depends(get_settings)) -> MessageOut:

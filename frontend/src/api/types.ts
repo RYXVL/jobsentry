@@ -255,13 +255,12 @@ export interface MonitorJob {
   posted_at: string | null;
 }
 
-/** One alert: the new jobs one fetch found. */
+/** One alert: the new jobs one fetch found. The chime was already played
+ *  by the computer when it happened. */
 export interface MonitorEvent {
   id: number;
   at: string;
   count: number;
-  /** An open tab plays the chime (otherwise the computer already did). */
-  play_in_browser: boolean;
   jobs: MonitorJob[];
 }
 

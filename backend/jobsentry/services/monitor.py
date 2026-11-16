@@ -9,9 +9,10 @@ After EVERY fetch-all finishes, whoever started it, the monitor:
      filter (the same matching as Today's jobs) that were posted after the
      previous fetch-all started (the "watermark"). The first fetch after
      Start takes all of today's matching jobs;
-  2. if it's on and there are any not announced before, records an alert:
-     a chime (played by an open Job Sentry tab if one checked in during the
-     last 30 seconds, otherwise by this computer) and/or one email;
+  2. if it's on and there are any not announced before, records an alert
+     and, at once, plays the chime on this computer and/or sends one email.
+     Open Job Sentry tabs pick the alert up on their next 15-second poll and
+     show a banner;
   3. moves the watermark to this fetch's start.
 
 The monitor is off whenever the API starts. Its settings, the watermark,
@@ -23,7 +24,6 @@ from __future__ import annotations
 
 import logging
 import threading
-import time
 from dataclasses import dataclass, fields, replace
 from datetime import datetime, timedelta, timezone
 from html import escape
@@ -46,8 +46,6 @@ log = logging.getLogger(__name__)
 MONITOR_FILE = "monitor.json"
 MINUTE_CHOICES = (15, 30, 45)
 HOUR_CHOICES = tuple(range(1, 25))
-#: A tab that checked in this recently plays the chime itself.
-HEARTBEAT_SECONDS = 30
 #: Alerts kept for the website to pick up.
 MAX_EVENTS = 50
 
@@ -111,7 +109,6 @@ class Monitor:
         self._next_fetch_at: datetime | None = None
         self._last_fetch_base: datetime | None = None
         self._first_fetch = False
-        self._last_heartbeat = float("-inf")
 
     # Settings and status ------------------------------------------------------
 
@@ -190,15 +187,19 @@ class Monitor:
     # The website --------------------------------------------------------------
 
     def poll(self, app: Settings, after: int | None) -> tuple[MonitorStatus, list[dict[str, Any]]]:
-        """Called by every open Job Sentry tab (every 15 seconds): records
-        that a tab is open, and returns alerts newer than `after`. With
-        `after` None, no alerts are returned (the tab only learns the
-        latest ID, so it won't replay old alerts)."""
+        """Called by every open Job Sentry tab (every 15 seconds): returns
+        the status and alerts newer than `after`, for the banner. With
+        `after` None, no alerts are returned (the tab only learns the latest
+        ID, so it won't show old alerts)."""
         with self._lock:
-            self._last_heartbeat = time.monotonic()
             events = self._load(app).get("events") or []
         new = [event for event in events if after is not None and event.get("id", 0) > after]
         return self.status(app), new
+
+    def test_sound(self) -> bool:
+        """Play the alert chime on this computer now. Returns whether a
+        player was found."""
+        return sound.play_chime()
 
     def send_test_email(self, app: Settings, email_to: str) -> str:
         """Step 1 of verifying an address: send a test email."""
@@ -225,13 +226,13 @@ class Monitor:
         with self._lock:
             data = self._load(app)
             email = data.setdefault("email", {})
-            print_ = email_sender.fingerprint(app, email_to)
+            current = email_sender.fingerprint(app, email_to)
             if received:
-                if email.get("pending") != print_:
+                if email.get("pending") != current:
                     raise MonitorSettingsError(
                         "Send a test email to this address first (the mail settings may have changed)."
                     )
-                email["verified"] = print_
+                email["verified"] = current
                 settings = self._settings_from(data)
                 data["settings"] = _settings_dict(replace(settings, email_to=email_to))
             email.pop("pending", None)
@@ -286,15 +287,15 @@ class Monitor:
                 jobs = self._new_jobs(app, settings.keywords, None if first else since)
                 jobs = self._not_announced(data, app, jobs)
                 if jobs:
-                    event = self._record_event(data, jobs, settings.sound and self._tab_open())
+                    event = self._record_event(data, jobs)
                     send_email = settings.email and self._verified(app, data, settings.email_to)
             data["watermark"] = run.started_at
             self._save(app, data)
 
         if event is None or settings is None:
             return
-        if settings.sound and not event["play_in_browser"]:
-            sound.play_chime()
+        if settings.sound:
+            sound.play_chime()  # at once, on this computer
         if send_email:
             self._email_alert(app, settings.email_to, event)
 
@@ -328,13 +329,12 @@ class Monitor:
         data["announced"] = seen
         return fresh
 
-    def _record_event(self, data: dict[str, Any], jobs: list[Job], play_in_browser: bool) -> dict[str, Any]:
+    def _record_event(self, data: dict[str, Any], jobs: list[Job]) -> dict[str, Any]:
         event_id = int(data.get("next_event_id", 1))
         event = {
             "id": event_id,
             "at": _iso(_now()),
             "count": len(jobs),
-            "play_in_browser": play_in_browser,
             "jobs": [
                 {
                     "source": job.source, "id": job.id, "title": job.title,
@@ -374,9 +374,6 @@ class Monitor:
             self._save(app, data)
 
     # Helpers ------------------------------------------------------------------
-
-    def _tab_open(self) -> bool:
-        return time.monotonic() - self._last_heartbeat <= HEARTBEAT_SECONDS
 
     def _verified(self, app: Settings, data: dict[str, Any], email_to: str) -> bool:
         if not email_to or not email_sender.is_configured(app):

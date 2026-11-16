@@ -243,6 +243,11 @@ export function useStopMonitor() {
   return useMonitorMutation((_: void) => api.stopMonitor());
 }
 
+/** Play the chime on this computer, as an alert would. */
+export function useTestSound() {
+  return useMutation({ mutationFn: api.testSound });
+}
+
 export function useSendTestEmail() {
   return useMutation({ mutationFn: (emailTo: string) => api.sendTestEmail(emailTo) });
 }
