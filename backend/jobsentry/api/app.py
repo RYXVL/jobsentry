@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .. import __version__
 from ..config import Settings
+from ..services.monitor import monitor
 from ..services.refresh_runner import runner
 from .dependencies import get_settings
 from .errors import register_error_handlers
@@ -32,12 +33,15 @@ the saved results to the frontend.
   **GET** `/sources/refresh` shows its progress.
 * `/catalog/...` adds, edits and deletes sources and their logos (when
   JOBSENTRY_ALLOW_CATALOG_EDITS is on).
+* `/monitor/...` fetches every company on a schedule and alerts about new jobs.
 """
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """On shutdown, cancel any sources still queued by a fetch-all."""
+    """On shutdown, stop the monitor (which lets the computer sleep again)
+    and cancel any sources still queued by a fetch-all."""
     yield
+    monitor.stop()
     runner.shutdown()
 
 def create_app(settings: Settings | None = None) -> FastAPI:

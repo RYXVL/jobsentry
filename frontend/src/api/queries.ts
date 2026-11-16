@@ -15,10 +15,18 @@ import { useEffect, useRef } from "react";
 
 import { bumpLogoVersion } from "../utils/logoVersion";
 import { api } from "./endpoints";
-import type { AllJobsParams, CatalogEntryInput, CheckInput, JobListParams } from "./types";
+import type {
+  AllJobsParams,
+  CatalogEntryInput,
+  CheckInput,
+  JobListParams,
+  MonitorSettings,
+} from "./types";
 
 /** How often to check a running fetch-all's progress. */
 const REFRESH_POLL_MS = 1000;
+/** After the monitor starts, wait this long for its first fetch to begin. */
+const MONITOR_START_DELAY_MS = 1000;
 
 export const queryKeys = {
   sources: ["sources"] as const,
@@ -32,6 +40,8 @@ export const queryKeys = {
   refreshRun: ["refresh-run"] as const,
   catalog: ["catalog"] as const,
   catalogEntry: (name: string) => ["catalog", name] as const,
+  // Kept up to date every 15 seconds by AlertListener.
+  monitor: ["monitor"] as const,
 };
 
 export function useSources() {
@@ -84,9 +94,14 @@ export function useRefreshSource(source: string) {
 }
 
 /**
- * Progress of fetching every source. Polls while a run is going, and every
- * time another source finishes, refreshes everything shown about saved data
- * (source cards, counts, today's jobs), so new data appears as it arrives.
+ * Progress of fetching every source. Polls every second while a run is
+ * going, and every time another source finishes, refreshes everything shown
+ * about saved data (source cards, counts, today's jobs), so new data appears
+ * as it arrives.
+ *
+ * Runs started by the monitor happen in the background, so this also
+ * watches the monitor's status: when the monitor starts (a new started_at)
+ * or reports it's fetching, the run is reloaded, which starts the polling.
  */
 export function useRefreshRun() {
   const queryClient = useQueryClient();
@@ -95,7 +110,9 @@ export function useRefreshRun() {
     queryFn: api.getRefreshRun,
     refetchInterval: (query) => (query.state.data?.state === "running" ? REFRESH_POLL_MS : false),
   });
+  const monitor = useMonitor().data;
 
+  // Each finished source: refresh the saved data shown.
   const completed = run.data?.completed;
   const lastCompleted = useRef(completed);
   useEffect(() => {
@@ -105,6 +122,26 @@ export function useRefreshRun() {
     }
     lastCompleted.current = completed;
   }, [completed, queryClient]);
+
+  // The monitor just started: its first fetch begins a moment later.
+  const monitorStartedAt = monitor?.active ? monitor.started_at : null;
+  useEffect(() => {
+    if (!monitorStartedAt) return;
+    const timer = window.setTimeout(
+      () => queryClient.invalidateQueries({ queryKey: queryKeys.refreshRun }),
+      MONITOR_START_DELAY_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [monitorStartedAt, queryClient]);
+
+  // The monitor reports a fetch this page hasn't seen yet.
+  const monitorFetching = monitor?.fetching ?? false;
+  const runRunning = run.data?.state === "running";
+  useEffect(() => {
+    if (monitorFetching && !runRunning) {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.refreshRun });
+    }
+  }, [monitorFetching, runRunning, queryClient]);
 
   return run;
 }
@@ -201,4 +238,51 @@ export function useDeleteSource() {
       ]);
     },
   });
+}
+
+// Monitor --------------------------------------------------------------------
+
+/** The monitor's settings and status (also refreshed by AlertListener). */
+export function useMonitor() {
+  return useQuery({ queryKey: queryKeys.monitor, queryFn: api.getMonitor });
+}
+
+/** A monitor action whose response is the new status, stored straight away. */
+function useMonitorMutation<TArgs>(action: (args: TArgs) => ReturnType<typeof api.getMonitor>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: action,
+    onSuccess: (status) => queryClient.setQueryData(queryKeys.monitor, status),
+  });
+}
+
+export function useSaveMonitorSettings() {
+  return useMonitorMutation((settings: MonitorSettings) => api.saveMonitorSettings(settings));
+}
+
+/** Save the settings, then start monitoring. */
+export function useStartMonitor() {
+  return useMonitorMutation(async (settings: MonitorSettings) => {
+    await api.saveMonitorSettings(settings);
+    return api.startMonitor();
+  });
+}
+
+export function useStopMonitor() {
+  return useMonitorMutation((_: void) => api.stopMonitor());
+}
+
+/** Play the chime on this computer, as an alert would. */
+export function useTestSound() {
+  return useMutation({ mutationFn: api.testSound });
+}
+
+export function useSendTestEmail() {
+  return useMutation({ mutationFn: (emailTo: string) => api.sendTestEmail(emailTo) });
+}
+
+export function useConfirmEmail() {
+  return useMonitorMutation(({ emailTo, received }: { emailTo: string; received: boolean }) =>
+    api.confirmEmail(emailTo, received),
+  );
 }

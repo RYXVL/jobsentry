@@ -287,6 +287,12 @@
       "company": "Mercor",
       "board_name": "mercor",
       "homepage": "https://www.mercor.com/careers/"
+    },
+    {
+      "name": "kalshi",
+      "company": "Kalshi",
+      "board_name": "kalshi",
+      "homepage": "https://job-boards.greenhouse.io/kalshi"
     }
   ]
 }

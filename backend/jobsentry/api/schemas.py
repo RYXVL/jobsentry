@@ -107,6 +107,9 @@ class RefreshRunOut(Schema):
     state: Literal["idle", "running", "done"] = Field(
         description="idle: none has run since the API started"
     )
+    trigger: Literal["manual", "monitor"] | None = Field(
+        None, description="What started the run: the button or the monitor"
+    )
     started_at: str | None = None
     finished_at: str | None = None
     total: int = Field(0, description="Sources in this run")
@@ -178,3 +181,62 @@ class LogoOut(Schema):
     name: str
     file: str | None = Field(description="The saved file's name, e.g. wise.png")
     removed: bool = Field(description="On delete: whether a logo existed")
+
+# Monitor ------------------------------------------------------------------
+
+class MonitorSettingsBody(Schema):
+    every: int = Field(description="15, 30 or 45 (minutes), or 1 to 24 (hours)")
+    unit: Literal["minutes", "hours"]
+    keywords: str = Field("", description="Same matching as Today's jobs; empty = every new job")
+    sound: bool = True
+    email: bool = False
+    email_to: str = ""
+
+class LastEmailOut(Schema):
+    at: str
+    ok: bool
+    error: str | None = None
+
+class MonitorOut(Schema):
+    settings: MonitorSettingsBody
+    active: bool
+    started_at: str | None
+    next_fetch_at: str | None
+    fetching: bool = Field(description="A fetch of every source is running")
+    last_fetch_started_at: str | None = Field(
+        description="When the last fetch of every source started (the watermark)"
+    )
+    email_configured: bool = Field(description="JOBSENTRY_SMTP_* is set in backend/.env")
+    email_verified: bool = Field(description="A test email to settings.email_to was confirmed")
+    last_email: LastEmailOut | None
+    latest_event_id: int
+
+class MonitorJobOut(Schema):
+    source: str
+    id: str
+    title: str
+    company: str
+    url: str
+    locations: list[str]
+    posted_at: str | None
+
+class MonitorEventOut(Schema):
+    """One alert: new jobs found by one fetch."""
+    id: int
+    at: str
+    count: int
+    jobs: list[MonitorJobOut]
+
+class MonitorPollOut(Schema):
+    monitor: MonitorOut
+    events: list[MonitorEventOut]
+
+class TestEmailIn(Schema):
+    email_to: str
+
+class ConfirmEmailIn(Schema):
+    email_to: str
+    received: bool
+
+class MessageOut(Schema):
+    message: str

@@ -1,0 +1,38 @@
+/* Three equal columns with equal gaps; one column on narrow screens.
+   (Media queries can't read CSS variables, so the width is written out.) */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 36rem) {
+  .tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A button with its note underneath, both centred in the column. Rows keep
+   their natural height (align-content: start), so a longer note in one
+   column never stretches the buttons. */
+.tile {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+/* Fill the column's width, label centred. `.tile .button` outranks the
+   Button component's own display rule. */
+.tile .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+
+.note {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}

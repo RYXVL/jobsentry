@@ -101,6 +101,8 @@ export interface RefreshItem {
 export interface RefreshRun {
   /** "idle" means none has run since the API started. */
   state: "idle" | "running" | "done";
+  /** What started the run: the "Fetch all jobs" button or the monitor. */
+  trigger: "manual" | "monitor" | null;
   started_at: string | null;
   finished_at: string | null;
   /** Sources in this run. */
@@ -208,4 +210,62 @@ export interface CheckResult {
   /** True when every board passed. */
   ok: boolean;
   boards: BoardCheckResult[];
+}
+
+// Monitor (/monitor) ---------------------------------------------------------
+
+export type MonitorUnit = "minutes" | "hours";
+
+export interface MonitorSettings {
+  /** 15, 30 or 45 (minutes), or 1 to 24 (hours). */
+  every: number;
+  unit: MonitorUnit;
+  /** Same matching as Today's jobs; empty = every new job. */
+  keywords: string;
+  sound: boolean;
+  email: boolean;
+  email_to: string;
+}
+
+/** GET /monitor. */
+export interface MonitorStatus {
+  settings: MonitorSettings;
+  active: boolean;
+  started_at: string | null;
+  next_fetch_at: string | null;
+  /** A fetch of every source is running. */
+  fetching: boolean;
+  /** When the last fetch of every source started (the watermark). */
+  last_fetch_started_at: string | null;
+  /** JOBSENTRY_SMTP_* is set in backend/.env. */
+  email_configured: boolean;
+  /** A test email to settings.email_to was confirmed. */
+  email_verified: boolean;
+  last_email: { at: string; ok: boolean; error: string | null } | null;
+  latest_event_id: number;
+}
+
+export interface MonitorJob {
+  source: string;
+  id: string;
+  title: string;
+  company: string;
+  url: string;
+  locations: string[];
+  posted_at: string | null;
+}
+
+/** One alert: the new jobs one fetch found. The chime was already played
+ *  by the computer when it happened. */
+export interface MonitorEvent {
+  id: number;
+  at: string;
+  count: number;
+  jobs: MonitorJob[];
+}
+
+/** GET /monitor/poll. */
+export interface MonitorPoll {
+  monitor: MonitorStatus;
+  events: MonitorEvent[];
 }

@@ -6,8 +6,8 @@ import styles from "./HomePage.module.css";
 /** The site logo, served from frontend/public/. */
 const LOGO_SRC = `${import.meta.env.BASE_URL}favicon-nobg.png`;
 
-/** The logo and name, a link explaining the platform, the way in, and the
- *  footer at the bottom of the screen. */
+/** The logo and name, a link explaining the platform, the way in (the
+ *  command center), and the footer at the bottom of the screen. */
 export function HomePage() {
   useDocumentTitle();
 
@@ -20,7 +20,7 @@ export function HomePage() {
           <span>Job Sentry</span>
         </h1>
         <ButtonLink to="/why">Why Job Sentry?</ButtonLink>
-        <ButtonLink to="/sources" size="large">
+        <ButtonLink to="/command-center" size="large">
           Be the first to apply
         </ButtonLink>
       </main>

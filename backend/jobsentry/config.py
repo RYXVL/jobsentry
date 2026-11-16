@@ -23,6 +23,14 @@ Managing sources from the website
     JOBSENTRY_LOGOS_DIR            where uploaded logos are saved
                                    (default: ../frontend/public/logos)
 
+Monitor email alerts
+    JOBSENTRY_SMTP_HOST      mail server; empty turns email off (default: empty)
+    JOBSENTRY_SMTP_PORT      port (default: 587)
+    JOBSENTRY_SMTP_SECURITY  starttls, ssl or none (default: starttls)
+    JOBSENTRY_SMTP_USERNAME  login, if the server needs one
+    JOBSENTRY_SMTP_PASSWORD  password (an app password for Gmail and Outlook)
+    JOBSENTRY_SMTP_FROM      sender address
+
 API
     JOBSENTRY_API_HOST      interface to bind (default: 127.0.0.1, this machine only)
     JOBSENTRY_API_PORT      port to listen on (default: 8000)
@@ -35,7 +43,7 @@ same configuration. Invalid values raise ConfigError.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -62,6 +70,9 @@ MAX_REFRESH_WORKERS = 32
 
 #: Where the frontend serves company logos from, next to backend/.
 DEFAULT_LOGOS_DIR = (BACKEND_DIR.parent / "frontend" / "public" / "logos").resolve()
+
+#: How alert emails connect to the mail server.
+SMTP_SECURITY_CHOICES = ("starttls", "ssl", "none")
 
 def load_env_file(path: Path = ENV_FILE) -> None:
     """Load `path` into os.environ without overriding variables already set.
@@ -95,6 +106,18 @@ def _get_bool(name: str, default: bool) -> bool:
     if raw in ("0", "false", "no", "off"):
         return False
     raise ConfigError(f"{name} must be true or false, got '{raw}'")
+
+def _get_choice(name: str, default: str, choices: tuple[str, ...]) -> str:
+    """Read a variable that must be one of `choices` (any case)."""
+    raw = (os.getenv(name) or "").strip().lower()
+    if not raw:
+        return default
+    if raw not in choices:
+        raise ConfigError(f"{name} must be one of {', '.join(choices)}, got '{raw}'")
+    return raw
+
+def _get_str(name: str) -> str:
+    return (os.getenv(name) or "").strip()
 
 def _get_list(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
     """Read a comma-separated variable into a tuple of non-empty strings."""
@@ -151,6 +174,13 @@ class Settings:
     timezone: str = "UTC"
     allow_catalog_edits: bool = True
     logos_dir: Path = DEFAULT_LOGOS_DIR
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_security: str = "starttls"
+    smtp_username: str = ""
+    # Kept out of repr() so the password never ends up in a log.
+    smtp_password: str = field(default="", repr=False)
+    smtp_from: str = ""
     api_host: str = "127.0.0.1"
     api_port: int = 8000
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
@@ -164,7 +194,7 @@ class Settings:
             data_dir=_resolve_path(os.getenv("JOBSENTRY_DATA_DIR") or d.data_dir),
             http_timeout=_get_number("JOBSENTRY_HTTP_TIMEOUT", d.http_timeout, float, 0.1),
             http_retries=_get_number("JOBSENTRY_HTTP_RETRIES", d.http_retries, int, 0),
-            user_agent=(os.getenv("JOBSENTRY_USER_AGENT") or "").strip() or d.user_agent,
+            user_agent=_get_str("JOBSENTRY_USER_AGENT") or d.user_agent,
             refresh_workers=_get_number(
                 "JOBSENTRY_REFRESH_WORKERS", d.refresh_workers, int, 1, MAX_REFRESH_WORKERS
             ),
@@ -175,7 +205,13 @@ class Settings:
             timezone=_get_timezone("JOBSENTRY_TIMEZONE", system_timezone()),
             allow_catalog_edits=_get_bool("JOBSENTRY_ALLOW_CATALOG_EDITS", d.allow_catalog_edits),
             logos_dir=_resolve_path(os.getenv("JOBSENTRY_LOGOS_DIR") or d.logos_dir),
-            api_host=(os.getenv("JOBSENTRY_API_HOST") or "").strip() or d.api_host,
+            smtp_host=_get_str("JOBSENTRY_SMTP_HOST"),
+            smtp_port=_get_number("JOBSENTRY_SMTP_PORT", d.smtp_port, int, 1, 65535),
+            smtp_security=_get_choice("JOBSENTRY_SMTP_SECURITY", d.smtp_security, SMTP_SECURITY_CHOICES),
+            smtp_username=_get_str("JOBSENTRY_SMTP_USERNAME"),
+            smtp_password=os.getenv("JOBSENTRY_SMTP_PASSWORD") or "",
+            smtp_from=_get_str("JOBSENTRY_SMTP_FROM"),
+            api_host=_get_str("JOBSENTRY_API_HOST") or d.api_host,
             api_port=_get_number("JOBSENTRY_API_PORT", d.api_port, int, 1, 65535),
             cors_origins=_get_list("JOBSENTRY_CORS_ORIGINS", d.cors_origins),
         )

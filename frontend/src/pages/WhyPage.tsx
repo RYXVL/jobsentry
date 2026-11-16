@@ -34,7 +34,7 @@ export function WhyPage() {
         ))}
       </ul>
       <div className={styles.cta}>
-        <ButtonLink to="/sources" size="large">
+        <ButtonLink to="/command-center" size="large">
           Be the first to apply
         </ButtonLink>
       </div>
