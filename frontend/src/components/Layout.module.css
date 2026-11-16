@@ -31,3 +31,8 @@
   color: var(--ink);
   text-decoration: underline;
 }
+
+/* Equal-width digits, so the text doesn't shift as the seconds change. */
+.countdown {
+  font-variant-numeric: tabular-nums;
+}
