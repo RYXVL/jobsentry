@@ -1,7 +1,7 @@
 {
   "name": "jobsentry-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Web UI for Job Sentry. Talks to the local FastAPI backend.",
   "license": "MIT",
   "type": "module",

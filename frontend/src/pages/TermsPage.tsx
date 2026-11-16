@@ -37,17 +37,24 @@ export function TermsPage() {
         <section className={styles.section}>
           <h2 className={styles.heading}>Your responsibilities</h2>
           <p>
-            You run Job Sentry on your own computer, and every request it makes comes from
-            there. You're responsible for using it lawfully and in line with the terms of the
-            services it contacts. In particular:
+            You run Job Sentry on your own computer, and every request and email it sends comes
+            from there. You're responsible for using it lawfully and in line with the terms of
+            the services it uses. In particular:
           </p>
           <ul>
-            <li>Keep refreshes reasonable rather than fetching constantly.</li>
+            <li>
+              Keep fetching reasonable: use a sensible monitor interval rather than fetching
+              constantly.
+            </li>
             <li>
               Add only companies whose jobs are published through a public job board API, and
               respect any site that refuses automated access.
             </li>
             <li>Don't use it to collect listings for resale or redistribution.</li>
+            <li>
+              If you use email alerts, follow your mail provider's rules, and send alerts only
+              to addresses you own or have permission to use.
+            </li>
           </ul>
         </section>
 
@@ -66,8 +73,8 @@ export function TermsPage() {
           <h2 className={styles.heading}>No affiliation</h2>
           <p>
             Job Sentry isn't affiliated with, endorsed by or sponsored by any company it lists,
-            or by Greenhouse, Ashby or Lever. Company names and logos belong to their owners and
-            are shown only to identify where a listing comes from.
+            or by Ashby, Greenhouse, Lever or SmartRecruiters. Company names and logos belong to
+            their owners and are shown only to identify where a listing comes from.
           </p>
         </section>
 
@@ -76,7 +83,9 @@ export function TermsPage() {
           <p>
             Job Sentry is provided "as is", without warranty of any kind. To the extent the law
             allows, its authors aren't liable for any loss arising from its use, including
-            missed, outdated or inaccurate listings.
+            missed, late, outdated or inaccurate listings and alerts. The monitor only runs
+            while Job Sentry is running and your computer is awake, so don't rely on it alone
+            for anything time-critical.
           </p>
         </section>
 

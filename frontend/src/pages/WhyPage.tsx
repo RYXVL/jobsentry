@@ -6,15 +6,19 @@ import styles from "./WhyPage.module.css";
 const REASONS = [
   {
     title: "Straight from the source",
-    text: "Job Sentry reads company career sites directly, so you see roles as the company lists them, without waiting for job boards to copy them over.",
+    text: "Job Sentry reads companies' own public job boards, so you see roles as the company lists them, without waiting for job sites to copy them over.",
   },
   {
     title: "Every company in one list",
-    text: "Instead of checking careers pages one by one, browse them all here, with titles, teams and locations side by side.",
+    text: "Instead of checking careers pages one by one, see every job posted today across all of them, newest first, with keyword and country filters.",
+  },
+  {
+    title: "Alerted the moment it matters",
+    text: "Turn on the monitor and Job Sentry checks every company on a schedule, then plays a sound or emails you when a new matching job appears.",
   },
   {
     title: "Free, with nothing to sign up for",
-    text: "No account and no ads. It runs on your own computer.",
+    text: "No account and no ads. It runs on your own computer, and your data stays there.",
   },
 ];
 
@@ -24,7 +28,7 @@ export function WhyPage() {
 
   return (
     <>
-      <PageHeader title="Why Job Sentry?" intro="Open jobs from company career sites, in one place." />
+      <PageHeader title="Why Job Sentry?" intro="New jobs from companies' own job boards, the moment they're posted." />
       <ul className={styles.reasons}>
         {REASONS.map((reason) => (
           <li key={reason.title}>
