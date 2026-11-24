@@ -249,12 +249,6 @@
       "homepage": "https://roblox.com/careers"
     },
     {
-      "name": "shein",
-      "company": "Shein",
-      "board_name": "shein",
-      "homepage": "https://careers.shein.com/"
-    },
-    {
       "name": "epic-games",
       "company": "Epic Games",
       "board_name": "epicgames",
@@ -294,6 +288,72 @@
       "company": "AssemblyAI",
       "board_name": "assemblyai",
       "homepage": "https://www.assemblyai.com/careers"
+    },
+    {
+      "name": "zscaler",
+      "company": "Zscaler",
+      "board_name": "zscaler",
+      "homepage": "https://zscaler.com/careers"
+    },
+    {
+      "name": "zoominfo",
+      "company": "ZoomInfo",
+      "board_name": "zoominfo",
+      "homepage": "https://zoominfo.com/careers"
+    },
+    {
+      "name": "zocdoc",
+      "company": "Zocdoc",
+      "board_name": "zocdoc",
+      "homepage": "https://zocdoc.com/careers"
+    },
+    {
+      "name": "zola",
+      "company": "Zola",
+      "board_name": "zola",
+      "homepage": "https://zola.com/careers"
+    },
+    {
+      "name": "ziprecruiter",
+      "company": "ZipRecruiter",
+      "board_name": "ziprecruiter",
+      "homepage": "https://ziprecruiter.com/careers"
+    },
+    {
+      "name": "zip-co-limited",
+      "company": "Zip Co Limited",
+      "board_name": "zipcolimited",
+      "homepage": "https://job-boards.greenhouse.io/zipcolimited"
+    },
+    {
+      "name": "zeta-global",
+      "company": "Zeta Global",
+      "board_name": "zetaglobal",
+      "homepage": "https://zetaglobal.com/careers"
+    },
+    {
+      "name": "zenoti",
+      "company": "Zenoti",
+      "board_name": "zenoti",
+      "homepage": "https://zenoti.com/careers"
+    },
+    {
+      "name": "xometry",
+      "company": "Xometry",
+      "board_name": "xometry",
+      "homepage": "https://xometry.com/careers"
+    },
+    {
+      "name": "wpp-media",
+      "company": "WPP Media",
+      "board_name": "wppmedia",
+      "homepage": "https://wppmedia.com/careers"
+    },
+    {
+      "name": "wpp",
+      "company": "WPP",
+      "board_name": "wpp",
+      "homepage": "https://wpp.com/careers"
     }
   ]
 }

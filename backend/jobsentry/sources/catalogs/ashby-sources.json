@@ -293,6 +293,72 @@
       "company": "Kalshi",
       "board_name": "kalshi",
       "homepage": "https://job-boards.greenhouse.io/kalshi"
+    },
+    {
+      "name": "lilt",
+      "company": "Lilt",
+      "board_name": "lilt-production",
+      "homepage": "https://lilt.com/careers"
+    },
+    {
+      "name": "tekion",
+      "company": "Tekion",
+      "board_name": "tekion",
+      "homepage": "https://tekion.com/careers"
+    },
+    {
+      "name": "riveron",
+      "company": "Riveron",
+      "board_name": "riveron",
+      "homepage": "https://riveron.com/careers"
+    },
+    {
+      "name": "netgear",
+      "company": "Netgear",
+      "board_name": "netgear",
+      "homepage": "https://netgear.com/in/about/careers/"
+    },
+    {
+      "name": "kandou-ai",
+      "company": "Kandou AI",
+      "board_name": "kandou-ai",
+      "homepage": "https://www.kandou.ai/careers"
+    },
+    {
+      "name": "ema",
+      "company": "Ema",
+      "board_name": "ema",
+      "homepage": "https://www.ema.ai/careers"
+    },
+    {
+      "name": "surveymonkey",
+      "company": "Surveymonkey",
+      "board_name": "surveymonkey",
+      "homepage": "https://surveymonkey.com/careers"
+    },
+    {
+      "name": "atlys",
+      "company": "Atlys",
+      "board_name": "atlys",
+      "homepage": "https://careers.atlys.com/"
+    },
+    {
+      "name": "composio",
+      "company": "Composio",
+      "board_name": "composio",
+      "homepage": "https://composio.com/careers"
+    },
+    {
+      "name": "coram-ai",
+      "company": "Coram AI",
+      "board_name": "coram-ai",
+      "homepage": "https://www.coram.ai/careers"
+    },
+    {
+      "name": "signal-ai",
+      "company": "Signal AI",
+      "board_name": "signal-ai",
+      "homepage": "https://signal-ai.com/careers"
     }
   ]
 }
